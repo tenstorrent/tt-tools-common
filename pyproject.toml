@@ -27,14 +27,11 @@ dependencies = [
   'black==23.11.0',
   'distro==1.8.0',
   'elasticsearch==8.11.0',
-  'jsons==1.6.3',
-  'linkify-it-py==2.0.2',
-  'pydantic==1.*',
   'psutil==5.9.6',
   'pyyaml==6.0.1',
   'rich==13.7.0',
   'textual==0.42.0',
-  'pre-commit==3.5.0'
+  'pre-commit==3.5.0',
 ]
 
 [project.urls]
@@ -42,8 +39,6 @@ dependencies = [
 "Bug Reports" = "https://github.com/tenstorrent/tt-tools-common/issues"
 "Source" = "https://github.com/tenstorrent/tt-tools-common"
 
-# [project.scripts]
-# tt-tools-common = "tt-tools-common:main"
 
 [tool.setuptools]
 include-package-data = true
