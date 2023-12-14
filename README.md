@@ -3,6 +3,12 @@
 This is a space for common utilities shared across Tentorrent tools.
 This is a helper library and not a standalone tool.
 
+## Official Repository
+
+[https://github.com/tenstorrent/tt-tools-common/](https://github.com/tenstorrent/tt-tools-common/)
+
+
+
 # Getting started
 Build and editing instruction are as follows -
 ### For tools developers
