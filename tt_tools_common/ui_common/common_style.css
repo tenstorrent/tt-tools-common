@@ -49,6 +49,7 @@ DataTable {
   color: $green;
   border: solid $green;
   height: 1fr;
+  text-align: center;
 }
 
 DataTable>.datatable--header {
@@ -74,8 +75,8 @@ DataTable>.datatable--header-cursor {
 }
 
 DataTable>.datatable--header-hover {
-  background: $yellow 60%;
-  color: white;
+  background: 0%;
+  color: white 0%;
 }
 
 DataTable>.datatable--hover {
@@ -161,6 +162,12 @@ Input>.input--placeholder {
   color: gray;
 }
 
+TabPane {
+  width: 100%;
+  /* Enable scrolling on tabs */
+  overflow: auto hidden;
+}
+
 /* Help Menu box styling*/
 TTHelperMenuBox {
   align: center middle;
@@ -195,5 +202,10 @@ MarkdownTableContent>.markdown-table--header {
   text-style: bold;
 }
 
-
-/* Help Menu box styling end*/
+TTHealthMenu,
+TTTextMenu,
+TTTestOutput {
+  padding: 1 2;
+  border: solid $green;
+  color: $green;
+}
