@@ -164,3 +164,9 @@ def hex_to_semver_m3_fw(hexsemver: int):
     ver = hexsemver >> 0 & 0xFF
 
     return f"{major}.{minor}.{patch}.{ver}"
+
+
+def init_logging(log_folder: str):
+    """Create log folders if they don't exist"""
+    if not os.path.isdir(log_folder):
+        os.mkdir(log_folder)
