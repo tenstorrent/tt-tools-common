@@ -21,11 +21,11 @@ def int_to_bits(x):
     return list(filter(lambda b: x & (1 << b), range(x.bit_length())))
 
 
-def get_chip_data(chip, file, internal: bool):
+def get_chip_data(chip, file, internal: bool, tool_name="tt_smi"):
     """
     Helper function to load a file from the chip's data directory.
     """
-    with importlib.resources.path("tt_smi", "") as path:
+    with importlib.resources.path(f"{tool_name}", "") as path:
         if chip.as_wh() is not None:
             prefix = "wormhole"
         elif chip.as_gs() is not None:
