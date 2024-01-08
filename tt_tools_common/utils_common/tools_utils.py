@@ -9,11 +9,11 @@ import importlib.resources
 from yaml import safe_load
 
 
-def init_fw_defines(chip):
+def init_fw_defines(chip, tool_name="tt_smi"):
     """
     Loads the fw_defines.yaml with arc msg definitions from the chip's data directory.
     """
-    fw_defines = safe_load(get_chip_data(chip, "fw_defines.yaml", False))
+    fw_defines = safe_load(get_chip_data(chip, "fw_defines.yaml", False, tool_name))
     return fw_defines
 
 
