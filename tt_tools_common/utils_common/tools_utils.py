@@ -30,6 +30,7 @@ def get_chip_data(chip_name, file, internal: bool, tool_name="tt_smi"):
     with importlib.resources.path(f"{tool_name}", "") as path:
         if chip_name not in ["wormhole", "grayskull"]:
             raise Exception("Only support fw messages for Wh or GS chips")
+        prefix = chip_name
         if internal:
             prefix = f".ignored/{prefix}"
         else:
