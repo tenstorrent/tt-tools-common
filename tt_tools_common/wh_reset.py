@@ -12,7 +12,6 @@ import fcntl
 import struct
 from pyluwen import PciChip
 from typing import List
-from tt_tools_common.utils_common.tools_utils import init_fw_defines
 
 
 class WHChipReset:
@@ -25,9 +24,9 @@ class WHChipReset:
     TENSTORRENT_RESET_DEVICE_RESET_PCIE_LINK = 1
     A3_STATE_PROP_TIME = 0.03
     POST_RESET_MSG_WAIT_TIME = 2
-
-    def __init__(self):
-        self.fw_defines = init_fw_defines("wormhole", "tt_tools_common")
+    MSG_TRIGGER_SPI_COPY_LtoR = 0x50
+    MSG_TYPE_ARC_STATE3 = 0xA3
+    MSG_TYPE_TRIGGER_RESET = 0x56
 
     def reset_device_ioctl(self, interface_id: int, flags: int) -> bool:
         dev_path = f"/dev/tenstorrent/{interface_id}"
@@ -67,10 +66,10 @@ class WHChipReset:
         # Trigger resets for all chips in order
         for chip in pci_chips:
             # Trigger A3 safe state. A3 is a safe state where there are no more pending regulator requests.
-            chip.arc_msg(self.fw_defines["MSG_TYPE_ARC_STATE3"], wait_for_done=True)
+            chip.arc_msg(self.MSG_TYPE_ARC_STATE3, wait_for_done=True)
             time.sleep(self.A3_STATE_PROP_TIME)
             # Triggers M3 board level reset by sending arc msg.
-            chip.arc_msg(self.fw_defines["MSG_TYPE_TRIGGER_RESET"], wait_for_done=False)
+            chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False)
 
         time.sleep(self.POST_RESET_MSG_WAIT_TIME)
 
