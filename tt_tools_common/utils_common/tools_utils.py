@@ -9,11 +9,13 @@ import importlib.resources
 from yaml import safe_load
 
 
-def init_fw_defines(chip, tool_name="tt_smi"):
+def init_fw_defines(chip_name: str = "wormhole", tool_name: str = "tt_smi"):
     """
     Loads the fw_defines.yaml with arc msg definitions from the chip's data directory.
     """
-    fw_defines = safe_load(get_chip_data(chip, "fw_defines.yaml", False, tool_name))
+    fw_defines = safe_load(
+        get_chip_data(chip_name, "fw_defines.yaml", False, tool_name)
+    )
     return fw_defines
 
 
@@ -21,16 +23,12 @@ def int_to_bits(x):
     return list(filter(lambda b: x & (1 << b), range(x.bit_length())))
 
 
-def get_chip_data(chip, file, internal: bool, tool_name="tt_smi"):
+def get_chip_data(chip_name, file, internal: bool, tool_name="tt_smi"):
     """
     Helper function to load a file from the chip's data directory.
     """
     with importlib.resources.path(f"{tool_name}", "") as path:
-        if chip.as_wh() is not None:
-            prefix = "wormhole"
-        elif chip.as_gs() is not None:
-            prefix = "grayskull"
-        else:
+        if chip_name not in ["wormhole", "grayskull"]:
             raise Exception("Only support fw messages for Wh or GS chips")
         if internal:
             prefix = f".ignored/{prefix}"
