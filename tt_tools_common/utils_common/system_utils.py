@@ -7,6 +7,8 @@ This file contains common utilities used by all tt-tools.
 import psutil
 import distro
 import platform
+import requests
+import json
 from typing import Union
 
 
@@ -84,6 +86,53 @@ def system_compatibility() -> dict:
     if psutil.virtual_memory().total >= 32 * 1e9:
         checklist["Memory"] = (True, "Pass")
     else:
-        checklist["Memory"] = (False, "Fail, not 32GB+")
+        checklist["Memory"] = (False, "Recommended 32GB+")
     print(checklist)
     return checklist
+
+
+def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
+    # TODO: Implement call to server to pull latest SW versions
+    """
+    Get software version info.
+
+    Args:
+        show_sw_ver (bool): Whether to show software version info. Will default to N/A if False.
+    """
+    sw_ver = {
+        "Firmware Bundle": "N/A",
+        "tt-smi": "N/A",
+        "tt-flash": "N/A",
+        "tt-kmd": "N/A",
+    }
+    version = {}
+    for board_id in board_ids:
+        url = (
+            "https://uoall5kstb.execute-api.us-west-2.amazonaws.com/dev?SerialNumber="
+            + board_id
+        )
+        try:
+            r = requests.get(url)
+
+            try:
+                r_text = r.json()
+            except json.JSONDecodeError:
+                print("Error decoding json")
+                version["Failed to fetch"] = "No response from server"
+            else:
+                if isinstance(r_text, dict):
+                    for key, value in r_text.items():
+                        if isinstance(value, str) and isinstance(key, str):
+                            version.update({key: value})
+                else:
+                    version["Failed to fetch"] = "Unexpected response from server"
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error during request: {e}")
+            index = str(e).find(" for ")
+            version["Failed to fetch"] = str(e)[:index]
+
+    if show_sw_ver:
+        return version
+
+    return sw_ver

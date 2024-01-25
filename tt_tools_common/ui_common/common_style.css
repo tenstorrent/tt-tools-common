@@ -9,7 +9,7 @@ $green: #1eb57d;
 $yellow: #ffd10a;
 $purple: #786bb0;
 $orange: darkorange;
-$grey: ansi_bright_black;
+$gray: ansi_bright_black;
 
 /* Principal style */
 * {
@@ -200,6 +200,17 @@ MarkdownTableContent {
 
 MarkdownTableContent>.markdown-table--header {
   text-style: bold;
+}
+
+Switch>.switch--slider {
+  color: $red;
+  background: red 12%;
+}
+
+
+Switch.-on>.switch--slider {
+  color: $green;
+  background: $green 15%;
 }
 
 TTHealthMenu,

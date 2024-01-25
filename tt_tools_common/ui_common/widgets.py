@@ -3,12 +3,13 @@
 
 from textual.app import RenderResult, ComposeResult
 from textual.widget import Widget
-from textual.widgets import Button, DataTable, ListView, ListItem, Label
+from textual.widgets import Button, DataTable, Label, Switch, Checkbox
 from textual.widgets.data_table import CellDoesNotExist
-from textual.containers import ScrollableContainer, Container, Grid
+from textual.containers import ScrollableContainer, Container, Grid, Horizontal
 from textual.coordinate import Coordinate
 from textual.screen import ModalScreen
 from textual.widgets import Markdown
+from textual import on
 from rich.panel import Panel
 from rich.table import Table
 from rich.style import Style
@@ -132,9 +133,14 @@ class TTMenu(Container):
                 f"{key.ljust(self.justify_width)}",
                 style=Style(color="#ffd10a", bold=True),
             )
-            text.append_text(Text("* ")).append_text(k).append_text(
-                Text(f": {value}\n")
-            )
+            if key == "Failed to fetch":
+                text.append_text(Text("")).append_text(k).append_text(
+                    Text(f": {value}\n", style=Style(color="dark_orange"))
+                )
+            else:
+                text.append_text(Text("* ")).append_text(k).append_text(
+                    Text(f": {value}\n")
+                )
         text.rstrip()
 
         return text
@@ -219,6 +225,64 @@ class TTHelperMenuBox(ModalScreen):
         yield Markdown(self.text, id="help_menu_box")
 
     async def action_quit(self) -> None:
+        """Return to main app"""
+        self.app.pop_screen()
+
+    async def action_esc_screen(self) -> None:
+        """An action to select test to run"""
+        self.app.pop_screen()
+
+    async def action_quit(self) -> None:
+        """Return to main app"""
+        self.app.pop_screen()
+
+    async def action_help(self) -> None:
+        """Return to main app"""
+        self.app.pop_screen()
+
+class TTSettingsMenu(ModalScreen):
+    """A custom modal screen with help options"""
+
+    BINDINGS = [
+        ("q, Q, s, S", "quit", "Quit"),
+        ("escape", "esc_screen", "Escape the open screen"),
+    ]
+
+    def __init__(self, text: str, theme: OrderedDict = {}) -> None:
+        super().__init__()
+        self.text = text
+        self.theme = theme
+
+    def compose(self) -> ComposeResult:
+        heading = "TT-SMI Settings"
+        instruction = "(tab/mouse/enter: navigate dialogue box & update switches)"
+        yield Grid(
+            Label(Text(heading, style=self.theme["light_green_bold"]), id="heading"),
+            Label(Text(instruction, style=self.theme["attention"]), id="instruction"),
+            Label("o Dark Mode:         ", id="dark_label"),
+            Switch(value=self.app.dark, id="dark_switch"),
+            Label("o Latest SW versions:", id="sw_label"),
+            Switch(value=self.app.get_latest_sw_vers, id="sw_switch"),
+            id="settings_menu_box",
+        )
+
+    @on(Switch.Changed)
+    def select_changed(self, event: Switch.Changed) -> None:
+        """Switch event handler"""
+        if event.switch.id == "dark_switch":
+            # Toggle dark mode for app
+            if event.switch.value == True:
+                self.app.dark = True
+            else:
+                self.app.dark = False
+        if event.switch.id == "sw_switch":
+            # Toggle getting latest sw versions
+            if event.switch.value == True:
+                self.app.get_latest_sw_vers = True
+            else:
+                self.app.get_latest_sw_vers = False
+
+    async def action_setting(self) -> None:
         """Return to main app"""
         self.app.pop_screen()
 
