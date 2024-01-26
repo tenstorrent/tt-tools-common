@@ -104,6 +104,8 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         "tt-smi": "N/A",
         "tt-flash": "N/A",
         "tt-kmd": "N/A",
+        "TT-Buda": "N/A",
+        "TT-Metallium": "N/A",
     }
     version = {}
     for board_id in board_ids:
