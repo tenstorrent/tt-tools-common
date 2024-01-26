@@ -104,8 +104,8 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         "tt-smi": "N/A",
         "tt-flash": "N/A",
         "tt-kmd": "N/A",
-        "TT-Buda": "N/A",
-        "TT-Metallium": "N/A",
+        "Buda": "N/A",
+        "Metallium": "N/A",
     }
     version = {}
     for board_id in board_ids:
@@ -135,7 +135,7 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
             version["Failed to fetch"] = str(e)[:index]
 
     if show_sw_ver:
-        version.update({"TT-Buda": "0.9.80", "TT-Metallium": "0.42.0"})
+        version.update({"Buda": "0.9.80", "Metallium": "0.42.0"})
         return version
 
     return sw_ver
