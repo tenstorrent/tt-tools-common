@@ -133,6 +133,7 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
             version["Failed to fetch"] = str(e)[:index]
 
     if show_sw_ver:
+        version.update({"TT-Buda": "0.9.80", "TT-Metallium": "0.42.0"})
         return version
 
     return sw_ver
