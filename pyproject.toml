@@ -24,13 +24,16 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
 ]
 dependencies = [
-  'black==23.11.0',
   'distro==1.8.0',
   'elasticsearch==8.11.0',
   'psutil==5.9.6',
   'pyyaml==6.0.1',
   'rich==13.7.0',
   'textual==0.42.0',
+]
+
+optional-dependencies.dev = [
+  'black==23.11.0',
   'pre-commit==3.5.0',
 ]
 
