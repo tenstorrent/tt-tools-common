@@ -110,7 +110,7 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
     version = {}
     for board_id in board_ids:
         url = (
-            "https://uoall5kstb.execute-api.us-west-2.amazonaws.com/dev?SerialNumber="
+            "https://cereal.tenstorrent.com?SerialNumber="
             + board_id
         )
         try:
