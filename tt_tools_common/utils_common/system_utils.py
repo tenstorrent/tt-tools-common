@@ -126,16 +126,19 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
                     for key, value in r_text.items():
                         if isinstance(value, str) and isinstance(key, str):
                             version.update({key: value})
+                    version.update({"Buda": "0.9.80", "Metallium": "0.42.0"})
                 else:
                     version["Failed to fetch"] = "Unexpected response from server"
-
-        except requests.exceptions.RequestException as e:
-            print(f"Error during request: {e}")
-            index = str(e).find(" for ")
-            version["Failed to fetch"] = str(e)[:index]
+        except requests.exceptions.HTTPError:
+            version["Failed to fetch"] = "We encountered an HTTP error."
+        except requests.exceptions.ConnectionError:
+            version["Failed to fetch"] = "There was an error connecting to the server. Please check your internet connection."
+        except requests.exceptions.Timeout:
+            version["Failed to fetch"] = "Timeout error. It seems the server is taking too long to respond."
+        except requests.exceptions.RequestException:
+            version["Failed to fetch"] = "Something unexpected happened."
 
     if show_sw_ver:
-        version.update({"Buda": "0.9.80", "Metallium": "0.42.0"})
         return version
 
     return sw_ver

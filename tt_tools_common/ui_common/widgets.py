@@ -134,8 +134,8 @@ class TTMenu(Container):
                 style=Style(color="#ffd10a", bold=True),
             )
             if key == "Failed to fetch":
-                text.append_text(Text("")).append_text(k).append_text(
-                    Text(f": {value}\n", style=Style(color="dark_orange"))
+                text.append_text(k).append_text(
+                    Text(f"\n{value}\n", style=Style(color="dark_orange"))
                 )
             else:
                 text.append_text(Text("* ")).append_text(k).append_text(
