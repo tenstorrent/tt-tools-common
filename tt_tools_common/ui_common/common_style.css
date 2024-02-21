@@ -88,7 +88,7 @@ DataTable>.datatable--hover {
 
 TTMenu,
 TTCompatibilityMenu {
-  padding: 1 2;
+  padding: 1 1;
   border: solid $green;
   color: $green;
 }
