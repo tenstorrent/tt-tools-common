@@ -54,7 +54,7 @@ class WHChipReset:
         finally:
             os.close(dev_fd)
 
-    def full_lds_reset(self, pci_interfaces: List[int]) -> List[PciChip]:
+    def full_lds_reset(self, pci_interfaces: List[int], reset_m3: bool = False) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
         for pci_interface in pci_interfaces:
@@ -69,7 +69,10 @@ class WHChipReset:
             chip.arc_msg(self.MSG_TYPE_ARC_STATE3, wait_for_done=True)
             time.sleep(self.A3_STATE_PROP_TIME)
             # Triggers M3 board level reset by sending arc msg.
-            chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False)
+            if reset_m3:
+                chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False, arg0=3)
+            else:
+                chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False)
 
         time.sleep(self.POST_RESET_MSG_WAIT_TIME)
 
