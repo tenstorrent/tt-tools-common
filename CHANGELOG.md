@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 1.1.0 - 21/02/2024
 
 ### Added
+- Functions to read and process arc refclk
 - Added CHANGELOG.md
 
 ### Fixed
