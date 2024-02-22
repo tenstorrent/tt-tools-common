@@ -10,8 +10,10 @@ import sys
 import time
 import fcntl
 import struct
-from pyluwen import PciChip
 from typing import List
+from pyluwen import PciChip
+from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
+from tt_tools_common.utils_common.tools_utils import read_refclk_counter
 
 
 class WHChipReset:
@@ -54,7 +56,9 @@ class WHChipReset:
         finally:
             os.close(dev_fd)
 
-    def full_lds_reset(self, pci_interfaces: List[int], reset_m3: bool = False) -> List[PciChip]:
+    def full_lds_reset(
+        self, pci_interfaces: List[int], reset_m3: bool = False
+    ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
         for pci_interface in pci_interfaces:
@@ -62,9 +66,12 @@ class WHChipReset:
                 pci_interface, self.TENSTORRENT_RESET_DEVICE_RESET_PCIE_LINK
             )
         pci_chips = [PciChip(pci_interface=interface) for interface in pci_interfaces]
-
+        refclk_list = []
+        fail = False
         # Trigger resets for all chips in order
         for chip in pci_chips:
+            # Collect the arc refclk for the chip before sending reset arc messages
+            refclk_list.append(read_refclk_counter(chip))
             # Trigger A3 safe state. A3 is a safe state where there are no more pending regulator requests.
             chip.arc_msg(self.MSG_TYPE_ARC_STATE3, wait_for_done=True)
             time.sleep(self.A3_STATE_PROP_TIME)
@@ -76,8 +83,25 @@ class WHChipReset:
 
         time.sleep(self.POST_RESET_MSG_WAIT_TIME)
 
-        for chip, pci_interface in zip(pci_chips, pci_interfaces):
+        for i, (chip, pci_interface) in enumerate(zip(pci_chips, pci_interfaces)):
             self.reset_device_ioctl(
                 pci_interface, self.TENSTORRENT_RESET_DEVICE_RESTORE_STATE
             )
+            current_refclk = read_refclk_counter(chip)
+            if refclk_list[i] < current_refclk:
+                print(
+                    CMD_LINE_COLOR.RED,
+                    f"Reset for pci {pci_interface} didn't go through! Refclk didn't reset. Value before: {refclk_list[i]}, value after: {current_refclk}",
+                    CMD_LINE_COLOR.ENDC,
+                )
+                fail = True
+
+        if fail:
+            print(
+                CMD_LINE_COLOR.BLUE,
+                "Reset failed for one or more boards, returning with non-zero exit code",
+                CMD_LINE_COLOR.ENDC,
+            )
+            sys.exit(1)
+
         return pci_chips

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Functions to read and process arc refclk
+- Added refclk check to wh link reset. Refclk value is expected to be smaller after reset
 - Added CHANGELOG.md
 
 ### Fixed
