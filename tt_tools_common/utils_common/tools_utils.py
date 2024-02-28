@@ -5,6 +5,7 @@
 This file contains common utilities used by all tt-tools.
 """
 import os
+import time
 import importlib.resources
 from yaml import safe_load
 
@@ -169,3 +170,60 @@ def init_logging(log_folder: str):
     """Create log folders if they don't exist"""
     if not os.path.isdir(log_folder):
         os.mkdir(log_folder)
+
+
+# Show that the refclock counter (ARC_RESET.REFCLK_COUNTER_LOW/HIGH) is ticking at
+# the expected frequency, independent of ARCLK.
+
+
+def read_refclk_counter(chip) -> int:
+    if chip.as_gs():
+        return None
+    high_addr = chip.axi_translate("ARC_RESET.REFCLK_COUNTER_HIGH").addr
+    low_addr = chip.axi_translate("ARC_RESET.REFCLK_COUNTER_LOW").addr
+    high1 = chip.axi_read32(high_addr)
+    low = chip.axi_read32(low_addr)
+    high2 = chip.axi_read32(high_addr)
+
+    if high1 != high2:
+        low = chip.axi_read32(low_addr)
+
+    return (high2 << 32) | low
+
+
+# Returns REFCLK_COUNTER rate in MHz
+def refclk_counter_rate(chip, delay_interval: float = 0.1) -> float:
+    before_refclk = read_refclk_counter(chip)
+    before_ns = time.time_ns()
+
+    time.sleep(delay_interval)
+
+    after_refclk = read_refclk_counter(chip)
+    after_ns = time.time_ns()
+
+    return (after_refclk - before_refclk) * 1000 / (after_ns - before_ns)
+
+
+def check_refclk_counter_read_speed(chip):
+    loops = 100
+
+    before_ns = time.time_ns()
+    for _ in range(loops):
+        read_refclk_counter(chip)
+    after_ns = time.time_ns()
+
+    if after_ns - before_ns > 100_000 * loops:
+        us_per = (after_ns - before_ns) // (loops * 1000)
+        print(f"REFCLK_COUNTER reads are unusually slow ({us_per}us).")
+
+
+def check_refclk_counter_rate(chip, expected_refclk: float, accuracy: float):
+    observed_refclk = refclk_counter_rate(chip)
+    # print(f"refclk {observed_refclk}MHz")
+    if (
+        abs(expected_refclk - observed_refclk) / min(expected_refclk, observed_refclk)
+        > accuracy / 100
+    ):
+        return f"REFCLK_COUNTER outside of allowed range: {observed_refclk}"
+    else:
+        return None

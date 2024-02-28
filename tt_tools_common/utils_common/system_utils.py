@@ -73,11 +73,11 @@ def system_compatibility() -> dict:
             if distro_version >= 20.04:
                 checklist["OS"] = (True, "Pass")
             else:
-                checklist["OS"] = (False, "Fail, not Ubuntu 20.04+")
+                checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
         else:
-            checklist["OS"] = (False, "Fail, not Ubuntu 20.04+")
+            checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
     else:
-        checklist["OS"] = (False, "Fail, not Ubuntu 20.04+")
+        checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
 
     if host_info["Driver"]:
         checklist["Driver"] = (True, "Pass")
