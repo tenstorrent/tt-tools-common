@@ -14,6 +14,7 @@ from typing import List
 from pyluwen import PciChip
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 from tt_tools_common.utils_common.tools_utils import read_refclk_counter
+from tt_tools_common.utils_common.system_utils import check_driver_version
 
 
 class WHChipReset:
@@ -61,6 +62,13 @@ class WHChipReset:
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
+        # Check the driver version and bail if link reset cannot be supported
+        check_driver_version(operation="board reset", minimum_driver_version=21)
+
+        print(
+            f"{CMD_LINE_COLOR.BLUE} Starting pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+        )
+
         for pci_interface in pci_interfaces:
             self.reset_device_ioctl(
                 pci_interface, self.TENSTORRENT_RESET_DEVICE_RESET_PCIE_LINK
@@ -98,10 +106,15 @@ class WHChipReset:
 
         if fail:
             print(
-                CMD_LINE_COLOR.BLUE,
+                CMD_LINE_COLOR.YELLOW,
                 "Reset failed for one or more boards, returning with non-zero exit code",
                 CMD_LINE_COLOR.ENDC,
             )
             sys.exit(1)
+        else:
+            #  All went well print success message
+            print(
+                f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}\n"
+            )
 
         return pci_chips
