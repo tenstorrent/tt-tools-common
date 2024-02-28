@@ -9,7 +9,11 @@ import distro
 import platform
 import requests
 import json
+import sys
 from typing import Union
+from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
+
+MINIMUM_DRIVER_VERSION_LDS_RESET = 21
 
 
 def get_size(size_bytes: int, suffix: str = "B") -> str:
@@ -35,6 +39,23 @@ def get_driver_version() -> Union[str, None]:
         driver = None
 
     return driver
+
+
+def check_driver_version(operation: str):
+    """Check if driver is beyond minimum version to perform resets"""
+    driver = get_driver_version()
+    if driver is None:
+        print(
+            CMD_LINE_COLOR.RED,
+            "No Tenstorrent driver detected! Please install driver using tt-kmd: https://github.com/tenstorrent/tt-kmd ",
+            CMD_LINE_COLOR.ENDC,
+        )
+        sys.exit(1)
+    if int(driver.split(".")[1]) < MINIMUM_DRIVER_VERSION_LDS_RESET:
+        print(
+            f"{CMD_LINE_COLOR.RED}This script requires ttkmd version to be greater than {'.'.join(map(str, MINIMUM_DRIVER_VERSION_LDS_RESET))}, not continuing with {operation}{CMD_LINE_COLOR.ENDC}"
+        )
+        sys.exit(1)
 
 
 def get_host_info() -> dict:
@@ -109,10 +130,7 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
     }
     version = {}
     for board_id in board_ids:
-        url = (
-            "https://cereal.tenstorrent.com?SerialNumber="
-            + board_id
-        )
+        url = "https://cereal.tenstorrent.com?SerialNumber=" + board_id
         try:
             r = requests.get(url)
 
@@ -132,9 +150,13 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         except requests.exceptions.HTTPError:
             version["Failed to fetch"] = "We encountered an HTTP error."
         except requests.exceptions.ConnectionError:
-            version["Failed to fetch"] = "There was an error connecting to the server. Please check your internet connection."
+            version[
+                "Failed to fetch"
+            ] = "There was an error connecting to the server. Please check your internet connection."
         except requests.exceptions.Timeout:
-            version["Failed to fetch"] = "Timeout error. It seems the server is taking too long to respond."
+            version[
+                "Failed to fetch"
+            ] = "Timeout error. It seems the server is taking too long to respond."
         except requests.exceptions.RequestException:
             version["Failed to fetch"] = "Something unexpected happened."
 
