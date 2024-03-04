@@ -35,7 +35,7 @@ def get_chip_data(chip_name, file, internal: bool, tool_name="tt_smi"):
         if internal:
             prefix = f".ignored/{prefix}"
         else:
-            prefix = f"data/{prefix}"
+            prefix = f"data/{prefix}" if not ".data" in tool_name else prefix
         return open(str(path.joinpath(f"{prefix}/{file}")))
 
 

@@ -5,12 +5,12 @@
 This file contains functions used to generate and save reset logs
 """
 
-import json
-import sys
-import datetime
 import os
+import sys
+import json
+import datetime
 from pathlib import Path
-import host_reset_log as log
+import tt_tools_common.reset_common.host_reset_log as log
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 from tt_tools_common.utils_common.system_utils import get_host_info
 
