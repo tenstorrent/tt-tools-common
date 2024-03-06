@@ -11,10 +11,9 @@ import base64
 import inspect
 import datetime
 from pathlib import Path
-from typing import Any, Union, List, TypeVar, Generic, Tuple
 from pydantic import BaseModel
 from pydantic.fields import Field
-import os
+from typing import Any, Union, List, TypeVar, Generic
 
 
 class Long(int):
@@ -153,7 +152,8 @@ class PciResetDeviceInfo(ElasticModel):
 class MoboReset(ElasticModel):
     """Model for storing information about a mobo reset"""
 
-    nb_host_pci_idx: int
+    #  allow for either an int or None
+    nb_host_pci_idx: Union[int, None]
     mobo: str
     credo: List[str]
     disabled_ports: List[str]
@@ -171,9 +171,7 @@ class HostResetLog(ElasticModel):
     wh_mobo_reset: List[MoboReset]
 
     def save_as_json(self, fname: Union[str, Path]):
-        expanded_fname = os.path.expanduser(fname)
-        os.makedirs(os.path.dirname(expanded_fname), exist_ok=True)
-        with open(expanded_fname, "w") as f:
-            raw_json = self.json(exclude_none=True)
+        with open(fname, "w") as f:
+            raw_json = self.json(exclude_none=False)
             reloaded_json = json.loads(raw_json)
             json.dump(reloaded_json, f, indent=4)

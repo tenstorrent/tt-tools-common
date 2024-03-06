@@ -4,12 +4,12 @@
 """
 This file contains common utilities used by all tt-tools.
 """
+import sys
+import json
 import psutil
 import distro
 import platform
 import requests
-import json
-import sys
 from typing import Union
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
@@ -32,6 +32,9 @@ def get_size(size_bytes: int, suffix: str = "B") -> str:
 
 
 def get_driver_version() -> Union[str, None]:
+    """
+    Get the version of the Tenstorrent driver
+    """
     try:
         with open("/sys/module/tenstorrent/version", "r", encoding="utf-8") as f:
             driver = f.readline().rstrip()
@@ -90,6 +93,9 @@ def get_host_info() -> dict:
 
 
 def system_compatibility() -> dict:
+    """
+    Return compatibility checklist for the system
+    """
     host_info = get_host_info()
     checklist = {}
     if host_info["OS"] == "Linux":
