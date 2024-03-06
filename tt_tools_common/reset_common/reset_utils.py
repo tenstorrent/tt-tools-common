@@ -41,13 +41,13 @@ def generate_reset_logs(devices, result_filename: str = None):
         re_init_devices=True,
         wh_mobo_reset=[
             log.MoboReset(
-                nb_host_pci_idx=None,
+                nb_host_pci_idx=wh_pci_idx,
                 mobo="<MOBO NAME>",
                 credo=["<group id>:<credo id>", "<group id>:<credo id>"],
                 disabled_ports=["<group id>:<credo id>", "<group id>:<credo id>"],
             ),
             log.MoboReset(
-                nb_host_pci_idx=None,
+                nb_host_pci_idx=wh_pci_idx,
                 mobo="<MOBO NAME>",
                 credo=["<group id>:<credo id>", "<group id>:<credo id>"],
                 disabled_ports=["<group id>:<credo id>", "<group id>:<credo id>"],

@@ -153,7 +153,7 @@ class MoboReset(ElasticModel):
     """Model for storing information about a mobo reset"""
 
     #  allow for either an int or None
-    nb_host_pci_idx: Union[int, None]
+    nb_host_pci_idx: Union[List[int], None]
     mobo: str
     credo: List[str]
     disabled_ports: List[str]
