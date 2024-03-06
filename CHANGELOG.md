@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.0 - 06/03/2024
+
+### Added
+- Migrated GS tensix reset to tools_common
+- Migrated all related GS data files
+- Functions to fetch arc and eth fw versions from telemetry
+- Unit tests for all device resets
+
+### Fixed
+- Driver check before WH reset
+- Perform NB host reset between module powercycle for galaxy reset
+
 ## 1.2.0 - 28/02/2024
 
 ### Added
