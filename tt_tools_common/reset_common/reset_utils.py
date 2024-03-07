@@ -1,28 +1,34 @@
-# SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+# SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """
 This file contains functions used to generate and save reset logs
 """
 
-import json
-import sys
-import datetime
 import os
+import sys
+import json
+import datetime
 from pathlib import Path
-import host_reset_log as log
+import tt_tools_common.reset_common.host_reset_log as log
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 from tt_tools_common.utils_common.system_utils import get_host_info
+from tt_tools_common.utils_common.tools_utils import init_logging
+
+LOG_FOLDER = os.path.expanduser("~/.config/tenstorrent")
 
 
-def generate_reset_logs(backend, result_filename: str = None):
-    """Generate and save reset logs"""
+def generate_reset_logs(devices, result_filename: str = None):
+    """
+    Generate and save reset logs
+    Separate pci indexes for gs and wh devices
+    Generate a reset log with a sample mobo reset config
+    """
+
     time_now = datetime.datetime.now()
-    date_string = time_now.strftime("%m-%d-%Y_%H:%M:%S")
-    log_filename = f"~/.config/tenstorrent/mobo_reset_config_{date_string}.json"
     gs_pci_idx = []
     wh_pci_idx = []
-    for i, dev in enumerate(backend.devices):
+    for i, dev in enumerate(devices):
         if dev.as_wh() and not dev.is_remote():
             wh_pci_idx.append(i)
         elif dev.as_gs():
@@ -35,13 +41,13 @@ def generate_reset_logs(backend, result_filename: str = None):
         re_init_devices=True,
         wh_mobo_reset=[
             log.MoboReset(
-                nb_host_pci_idx=0,
+                nb_host_pci_idx=wh_pci_idx,
                 mobo="<MOBO NAME>",
                 credo=["<group id>:<credo id>", "<group id>:<credo id>"],
                 disabled_ports=["<group id>:<credo id>", "<group id>:<credo id>"],
             ),
             log.MoboReset(
-                nb_host_pci_idx=1,
+                nb_host_pci_idx=wh_pci_idx,
                 mobo="<MOBO NAME>",
                 credo=["<group id>:<credo id>", "<group id>:<credo id>"],
                 disabled_ports=["<group id>:<credo id>", "<group id>:<credo id>"],
@@ -52,6 +58,10 @@ def generate_reset_logs(backend, result_filename: str = None):
         dir_path = os.path.dirname(os.path.realpath(result_filename))
         Path(dir_path).mkdir(parents=True, exist_ok=True)
         log_filename = result_filename
+    else:
+        log_filename = f"{LOG_FOLDER}/reset_config.json"
+        if not os.path.exists(LOG_FOLDER):
+            init_logging(LOG_FOLDER)
     reset_log.save_as_json(log_filename)
     return log_filename
 

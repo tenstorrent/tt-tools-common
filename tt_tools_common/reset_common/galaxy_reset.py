@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+# SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """
@@ -13,6 +13,7 @@ from typing import Optional
 from tqdm import tqdm
 
 from tt_tools_common.utils_common.system_utils import check_driver_version
+from tt_tools_common.reset_common.wh_reset import WHChipReset
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
 
@@ -235,8 +236,18 @@ class GalaxyReset:
             mobo_dict_list, self.wait_for_boot_complete, (mobo_list,)
         )
 
-        # Powercycle modules
+        # Shutdown modules
         self.threaded_mobo_reset(mobo_dict_list, self.shutdown_modules)
+
+        # Link reset the NB host connected to the mobo
+        nb_host_pci_idx_list = []
+        for entry in mobo_dict_list:
+            if "nb_host_pci_idx" in entry.keys() and entry["nb_host_pci_idx"]:
+                nb_host_pci_idx_list.extend(entry["nb_host_pci_idx"])
+        if nb_host_pci_idx_list:
+            WHChipReset().full_lds_reset(nb_host_pci_idx_list)
+
+        # Boot modules after reset
         self.threaded_mobo_reset(mobo_dict_list, self.boot_modules)
 
     def mobo_reset_from_json(self, json_dict):

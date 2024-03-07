@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+# SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """
@@ -6,6 +6,7 @@ This file contains common utilities used by all tt-tools.
 """
 import os
 import time
+import jsons
 import importlib.resources
 from yaml import safe_load
 
@@ -35,7 +36,7 @@ def get_chip_data(chip_name, file, internal: bool, tool_name="tt_smi"):
         if internal:
             prefix = f".ignored/{prefix}"
         else:
-            prefix = f"data/{prefix}"
+            prefix = f"data/{prefix}" if not ".data" in tool_name else prefix
         return open(str(path.joinpath(f"{prefix}/{file}")))
 
 
@@ -227,3 +228,17 @@ def check_refclk_counter_rate(chip, expected_refclk: float, accuracy: float):
         return f"REFCLK_COUNTER outside of allowed range: {observed_refclk}"
     else:
         return None
+
+
+def get_arc_fw_version(chip) -> str:
+    """Get arc fw version from chip telemetry"""
+    return hex_to_semver_m3_fw(
+        jsons.dump(chip.get_telemetry())["smbus_tx_arc0_fw_version"]
+    )
+
+
+def get_eth_fw_version(chip) -> str:
+    """Get eth fw version from chip telemetry"""
+    return hex_to_semver_eth(
+        jsons.dump(chip.get_telemetry())["smbus_tx_eth_fw_version"]
+    )

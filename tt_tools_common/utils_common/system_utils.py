@@ -1,15 +1,15 @@
-# SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+# SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """
 This file contains common utilities used by all tt-tools.
 """
+import sys
+import json
 import psutil
 import distro
 import platform
 import requests
-import json
-import sys
 from typing import Union
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
@@ -32,6 +32,9 @@ def get_size(size_bytes: int, suffix: str = "B") -> str:
 
 
 def get_driver_version() -> Union[str, None]:
+    """
+    Get the version of the Tenstorrent driver
+    """
     try:
         with open("/sys/module/tenstorrent/version", "r", encoding="utf-8") as f:
             driver = f.readline().rstrip()
@@ -41,8 +44,13 @@ def get_driver_version() -> Union[str, None]:
     return driver
 
 
-def check_driver_version(operation: str):
-    """Check if driver is beyond minimum version to perform resets"""
+def check_driver_version(
+    operation: str, minimum_driver_version: str = MINIMUM_DRIVER_VERSION_LDS_RESET
+):
+    """
+    Check if driver is beyond minimum version to perform resets
+    Return non zero exit code and bail if version check fails
+    """
     driver = get_driver_version()
     if driver is None:
         print(
@@ -51,9 +59,9 @@ def check_driver_version(operation: str):
             CMD_LINE_COLOR.ENDC,
         )
         sys.exit(1)
-    if int(driver.split(".")[1]) < MINIMUM_DRIVER_VERSION_LDS_RESET:
+    if int(driver.split(".")[1]) < minimum_driver_version:
         print(
-            f"{CMD_LINE_COLOR.RED}This script requires ttkmd version to be greater than {'.'.join(map(str, MINIMUM_DRIVER_VERSION_LDS_RESET))}, not continuing with {operation}{CMD_LINE_COLOR.ENDC}"
+            f"{CMD_LINE_COLOR.RED}This script requires ttkmd version to be greater than {'.'.join(map(str, minimum_driver_version))}, not continuing with {operation}{CMD_LINE_COLOR.ENDC}"
         )
         sys.exit(1)
 
@@ -85,6 +93,9 @@ def get_host_info() -> dict:
 
 
 def system_compatibility() -> dict:
+    """
+    Return compatibility checklist for the system
+    """
     host_info = get_host_info()
     checklist = {}
     if host_info["OS"] == "Linux":
