@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+# SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 from textual.app import RenderResult, ComposeResult
@@ -239,6 +239,7 @@ class TTHelperMenuBox(ModalScreen):
     async def action_help(self) -> None:
         """Return to main app"""
         self.app.pop_screen()
+
 
 class TTSettingsMenu(ModalScreen):
     """A custom modal screen with help options"""
