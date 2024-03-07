@@ -205,7 +205,7 @@ class GalaxyReset:
 
         mobo = mobo_dict["mobo"]
         print(
-            CMD_LINE_COLOR.BLUE,
+            CMD_LINE_COLOR.PURPLE,
             f"{mobo} - Turning off modules ...",
             CMD_LINE_COLOR.ENDC,
         )
@@ -217,7 +217,7 @@ class GalaxyReset:
         # Function for booting modules concurrently
         mobo = mobo_dict["mobo"]
         print(
-            CMD_LINE_COLOR.BLUE,
+            CMD_LINE_COLOR.PURPLE,
             f"{mobo} - Turning on modules ...",
             CMD_LINE_COLOR.ENDC,
         )
@@ -245,6 +245,8 @@ class GalaxyReset:
             if "nb_host_pci_idx" in entry.keys() and entry["nb_host_pci_idx"]:
                 nb_host_pci_idx_list.extend(entry["nb_host_pci_idx"])
         if nb_host_pci_idx_list:
+            # remove duplicate entries
+            nb_host_pci_idx_list = list(set(nb_host_pci_idx_list))
             WHChipReset().full_lds_reset(nb_host_pci_idx_list)
 
         # Boot modules after reset

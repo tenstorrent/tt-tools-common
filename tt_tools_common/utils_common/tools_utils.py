@@ -170,7 +170,7 @@ def hex_to_semver_m3_fw(hexsemver: int):
 def init_logging(log_folder: str):
     """Create log folders if they don't exist"""
     if not os.path.isdir(log_folder):
-        os.mkdir(log_folder)
+        os.makedirs(log_folder)
 
 
 # Show that the refclock counter (ARC_RESET.REFCLK_COUNTER_LOW/HIGH) is ticking at

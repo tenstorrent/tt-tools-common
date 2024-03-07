@@ -73,8 +73,15 @@ def parse_reset_input(value):
         with open(value, "r") as json_file:
             data = json.load(json_file)
             return data
-    except (json.JSONDecodeError, FileNotFoundError):
-        # If parsing as JSON fails, treat it as a comma-separated list of integers
+    except json.JSONDecodeError as e:
+        print(
+            CMD_LINE_COLOR.RED,
+            f"Please check the format of the json file.\n {e}",
+            CMD_LINE_COLOR.ENDC,
+        )
+        sys.exit(1)
+    except FileNotFoundError:
+        # If no file found, attempt to parse as a list of comma separated integers
         try:
             return [int(item) for item in value.split(",")]
         except ValueError:

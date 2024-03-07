@@ -115,7 +115,7 @@ class WHChipReset:
         else:
             #  All went well print success message
             print(
-                f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}\n"
+                f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
 
         return pci_chips
