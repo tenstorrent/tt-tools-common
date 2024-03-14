@@ -30,9 +30,9 @@ def generate_reset_logs(devices, result_filename: str = None):
     wh_pci_idx = []
     for i, dev in enumerate(devices):
         if dev.as_wh() and not dev.is_remote():
-            wh_pci_idx.append(i)
+            wh_pci_idx.append(dev.get_pci_interface_id())
         elif dev.as_gs():
-            gs_pci_idx.append(i)
+            gs_pci_idx.append(dev.get_pci_interface_id())
     reset_log = log.HostResetLog(
         time=time_now,
         host_name=get_host_info()["Hostname"],
