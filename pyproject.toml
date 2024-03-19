@@ -33,6 +33,7 @@ dependencies = [
   'requests==2.31.0',
   'jsons==1.6.3',
   'tqdm==4.66.1',
+  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.3.2#subdirectory=crates/pyluwen",
 ]
 
 optional-dependencies.dev = [
