@@ -63,7 +63,7 @@ class WHChipReset:
         """Performs a full LDS reset of a list of chips"""
 
         # Check the driver version and bail if link reset cannot be supported
-        check_driver_version(operation="board reset", minimum_driver_version=21)
+        check_driver_version(operation="board reset")
         # Remove duplicates from the input list of pci interfaces
         pci_interfaces = list(set(pci_interfaces))
         print(
@@ -115,7 +115,7 @@ class WHChipReset:
         else:
             #  All went well print success message
             print(
-                f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}\n"
+                f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
 
         return pci_chips

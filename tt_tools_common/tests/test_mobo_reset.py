@@ -38,8 +38,8 @@ def main():
     mobo_dict_list = parse_reset_input(INPUT_FILE)["wh_mobo_reset"]
     mobo_reset_obj = GalaxyReset()
     mobo_reset_obj.warm_reset_mobo(mobo_dict_list)
-    reset_obj = WHChipReset()
-    reset_obj.full_lds_reset(list(range(WH_RESET_PCI_NUM)))
+    # reset_obj = WHChipReset()
+    # reset_obj.full_lds_reset(list(range(WH_RESET_PCI_NUM)))
 
 
 if __name__ == "__main__":

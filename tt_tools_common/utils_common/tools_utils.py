@@ -5,10 +5,14 @@
 This file contains common utilities used by all tt-tools.
 """
 import os
+import sys
 import time
 import jsons
+from typing import List
 import importlib.resources
 from yaml import safe_load
+from pyluwen import PciChip, detect_chips_fallible
+from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
 
 def init_fw_defines(chip_name: str = "wormhole", tool_name: str = "tt_smi"):
@@ -170,7 +174,7 @@ def hex_to_semver_m3_fw(hexsemver: int):
 def init_logging(log_folder: str):
     """Create log folders if they don't exist"""
     if not os.path.isdir(log_folder):
-        os.mkdir(log_folder)
+        os.makedirs(log_folder)
 
 
 # Show that the refclock counter (ARC_RESET.REFCLK_COUNTER_LOW/HIGH) is ticking at
@@ -242,3 +246,103 @@ def get_eth_fw_version(chip) -> str:
     return hex_to_semver_eth(
         jsons.dump(chip.get_telemetry())["smbus_tx_eth_fw_version"]
     )
+
+
+def detect_chips_with_callback(
+    local_only: bool = False,
+    ignore_ethernet: bool = False,
+) -> List[PciChip]:
+    """
+    This will create a chip which only guarantees that you have communication with the chip.
+    """
+
+    chip_count = 0
+    block_count = 0
+    arc_count = 0
+    dram_count = 0
+    spinner = ["\\", "|", "/", "-"]
+
+    last_draw = time.time()
+
+    def chip_detect_callback(status):
+        nonlocal chip_count, last_draw, block_count, arc_count, dram_count
+
+        if status.new_chip():
+            chip_count += 1
+        elif status.correct_down():
+            chip_count -= 1
+        chip_count = max(chip_count, 0)
+
+        # Move the cursor and delete the previous block of printed lines
+        if block_count > 0:
+            print(f"\033[{block_count}A", end="", flush=True)
+            print(f"\033[J", end="", flush=True)
+
+        print(
+            f"\r{CMD_LINE_COLOR.PURPLE} Detected Chips: {CMD_LINE_COLOR.YELLOW}{chip_count}{CMD_LINE_COLOR.ENDC}\n",
+            end="",
+            flush=True,
+        )
+        block_count = 1
+
+        # Prune and update the status string
+        status_string = status.status_string()
+        if status_string is not None and local_only is False:
+            # remove empty lines
+            for line in list(filter(None, status_string.splitlines())):
+                # Up the counter for each line printed
+                block_count += 1
+                if "ARC" in line:
+                    arc_count = arc_count + 1
+                    # Spinner character is based on the number of ARCs detected
+                    print(
+                        f"\r{CMD_LINE_COLOR.BLUE} Detecting ARC: "
+                        + f"{CMD_LINE_COLOR.YELLOW}{spinner[arc_count % len(spinner)]}{CMD_LINE_COLOR.ENDC}",
+                        flush=True,
+                    )
+                elif "DRAM" in line:
+                    dram_count = dram_count + 1
+                    print(
+                        f"\r{CMD_LINE_COLOR.BLUE} Detecting DRAM: "
+                        + f"{CMD_LINE_COLOR.YELLOW}{spinner[dram_count % len(spinner)]}{CMD_LINE_COLOR.ENDC}",
+                        flush=True,
+                    )
+                elif "ETH" in line:
+                    import re
+
+                    paren_pattern = r"\((.*?)\)"
+                    bracket_pattern = r"\[(.*?)\]"
+                    # Find substrings between parentheses
+                    paren_substr = re.search(paren_pattern, line)
+                    bracket_substr = re.search(bracket_pattern, line)
+                    # Extract substring from matched group
+                    bracket_substr = bracket_substr.group(1) if bracket_substr else ""
+                    paren_substr = paren_substr.group(1) if paren_substr else ""
+                    line = re.sub(paren_pattern, "", line)
+                    print(
+                        f"\r {CMD_LINE_COLOR.PURPLE}[{paren_substr}]{CMD_LINE_COLOR.BLUE}{line}: "
+                        + f"{CMD_LINE_COLOR.YELLOW}{spinner[dram_count % len(spinner)]}{CMD_LINE_COLOR.ENDC}",
+                        flush=True,
+                    )
+                else:
+                    print(
+                        f"\r{line}",
+                        flush=True,
+                    )
+
+    output = []
+    for device in detect_chips_fallible(
+        local_only=local_only,
+        continue_on_failure=False,
+        callback=chip_detect_callback,
+        noc_safe=ignore_ethernet,
+    ):
+        if not device.have_comms():
+            raise Exception(
+                f"Do not have communication with {device}, you should reset or remove this device from your system before continuing."
+            )
+
+        device = device.force_upgrade()
+        output.append(device)
+
+    return output

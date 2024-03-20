@@ -13,7 +13,7 @@ import requests
 from typing import Union
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
-MINIMUM_DRIVER_VERSION_LDS_RESET = 21
+MINIMUM_DRIVER_VERSION_LDS_RESET = 26
 
 
 def get_size(size_bytes: int, suffix: str = "B") -> str:
@@ -61,7 +61,19 @@ def check_driver_version(
         sys.exit(1)
     if int(driver.split(".")[1]) < minimum_driver_version:
         print(
-            f"{CMD_LINE_COLOR.RED}This script requires ttkmd version to be greater than {'.'.join(map(str, minimum_driver_version))}, not continuing with {operation}{CMD_LINE_COLOR.ENDC}"
+            CMD_LINE_COLOR.RED,
+            f"Current driver version: {driver}",
+            CMD_LINE_COLOR.ENDC,
+        )
+        print(
+            CMD_LINE_COLOR.RED,
+            f"This script requires driver version to be greater than 1.{minimum_driver_version}, not continuing with {operation}",
+            CMD_LINE_COLOR.ENDC,
+        )
+        print(
+            CMD_LINE_COLOR.RED,
+            "Please install correct driver version using tt-kmd: https://github.com/tenstorrent/tt-kmd ",
+            CMD_LINE_COLOR.ENDC,
         )
         sys.exit(1)
 
