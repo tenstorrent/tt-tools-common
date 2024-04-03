@@ -363,34 +363,40 @@ class GSTensixReset:
         for index, mask in enumerate(self.all_tensix_reset_mask()):
             self.axi_registers.write32(f"ARC_RESET.RISCV_RESET[{index}]", mask)
 
-    def tensix_reset(self) -> None:
+    def tensix_reset(self, silent=False) -> None:
         """
         This resets all tensix cores on a GS chip, leaving the un-harvested risc's in soft reset.
         """
-        print(
-            CMD_LINE_COLOR.YELLOW, "Lowering clks to safe value...", CMD_LINE_COLOR.ENDC
-        )
-        self.set_safe_clks(True)
-        try:
+        if not silent:
             print(
                 CMD_LINE_COLOR.YELLOW,
-                "Beginning reset sequence...",
+                "Lowering clks to safe value...",
                 CMD_LINE_COLOR.ENDC,
             )
+        self.set_safe_clks(True)
+        try:
+            if not silent:
+                print(
+                    CMD_LINE_COLOR.YELLOW,
+                    "Beginning reset sequence...",
+                    CMD_LINE_COLOR.ENDC,
+                )
             self.all_riscs_assert_hard_reset()
             self.tensix_toggle_reset()
             self.setup_noc()
             self.assert_all_riscv_soft_reset()
             self.all_riscs_deassert_hard_reset()
-            print(
-                CMD_LINE_COLOR.YELLOW,
-                "Finishing reset sequence...",
-                CMD_LINE_COLOR.ENDC,
-            )
+            if not silent:
+                print(
+                    CMD_LINE_COLOR.YELLOW,
+                    "Finishing reset sequence...",
+                    CMD_LINE_COLOR.ENDC,
+                )
         finally:
-            print(
-                CMD_LINE_COLOR.YELLOW,
-                "Returning clks to original values...",
-                CMD_LINE_COLOR.ENDC,
-            )
+            if not silent:
+                print(
+                    CMD_LINE_COLOR.YELLOW,
+                    "Returning clks to original values...",
+                    CMD_LINE_COLOR.ENDC,
+                )
             self.set_safe_clks(False)

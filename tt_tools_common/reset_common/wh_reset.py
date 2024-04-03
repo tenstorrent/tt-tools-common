@@ -58,7 +58,7 @@ class WHChipReset:
             os.close(dev_fd)
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False
+        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
@@ -66,9 +66,10 @@ class WHChipReset:
         check_driver_version(operation="board reset")
         # Remove duplicates from the input list of pci interfaces
         pci_interfaces = list(set(pci_interfaces))
-        print(
-            f"{CMD_LINE_COLOR.BLUE} Starting pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
-        )
+        if not silent:
+            print(
+                f"{CMD_LINE_COLOR.BLUE} Starting pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+            )
 
         for pci_interface in pci_interfaces:
             self.reset_device_ioctl(
@@ -114,8 +115,9 @@ class WHChipReset:
             sys.exit(1)
         else:
             #  All went well print success message
-            print(
-                f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
-            )
+            if not silent:
+                print(
+                    f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                )
 
         return pci_chips
