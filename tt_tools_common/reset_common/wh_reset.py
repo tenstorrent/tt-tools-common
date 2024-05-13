@@ -14,7 +14,10 @@ from typing import List
 from pyluwen import PciChip
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 from tt_tools_common.utils_common.tools_utils import read_refclk_counter
-from tt_tools_common.utils_common.system_utils import check_driver_version
+from tt_tools_common.utils_common.system_utils import (
+    check_driver_version,
+    get_host_info,
+)
 
 
 class WHChipReset:
@@ -64,6 +67,18 @@ class WHChipReset:
 
         # Check the driver version and bail if link reset cannot be supported
         check_driver_version(operation="board reset")
+
+        # Due to how ARM systems deal with pcie device rescans, WH device resets don't work on that platform.
+        # Check for platform and bail if it's ARM
+        platform = get_host_info()["Platform"]
+        if platform.startswith("arm") or platform.startswith("aarch"):
+            print(
+                CMD_LINE_COLOR.RED,
+                "Cannot perform WH board reset on ARM systems, please reboot the system to reset the boards. Exiting...",
+                CMD_LINE_COLOR.ENDC,
+            )
+            sys.exit(1)
+
         # Remove duplicates from the input list of pci interfaces
         pci_interfaces = list(set(pci_interfaces))
         if not silent:
@@ -80,6 +95,19 @@ class WHChipReset:
         fail = False
         # Trigger resets for all chips in order
         for chip in pci_chips:
+            # Init the chip to get the chip to a known state and throw exception if it fails
+            try:
+                chip.init()
+            except Exception as e:
+                # If we get to this point means ioctl reset isn't enough to reset the chip
+                # This is a fatal error, we should exit and recommend user to reboot the system
+                print(
+                    CMD_LINE_COLOR.RED,
+                    "Failed to recover WH chip, please reboot the system to reset the chip. Exiting...",
+                    CMD_LINE_COLOR.ENDC,
+                )
+                sys.exit(1)
+
             # Collect the arc refclk for the chip before sending reset arc messages
             refclk_list.append(read_refclk_counter(chip))
             # Trigger A3 safe state. A3 is a safe state where there are no more pending regulator requests.

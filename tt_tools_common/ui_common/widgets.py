@@ -160,19 +160,19 @@ class TTCompatibilityMenu(Container):
         for key, value in self.data.items():
             if value[0] == True:
                 k = Text(
-                    f"{key.ljust(self.justify_width)}",
+                    f"{key.ljust(self.justify_width)}" + ": ",
                     style=Style(color="#ffd10a", bold=True),
                 )
                 text.append_text(Text("* ")).append_text(k).append_text(
-                    Text(f": {value[1]}\n")
+                    Text(f"{value[1]}\n")
                 )
             else:
                 k = Text(
-                    f"{key.ljust(self.justify_width)}",
+                    f"{key.ljust(self.justify_width)}" + ": ",
                     style=Style(color="#ffd10a", bold=True),
                 )
                 text.append_text(Text("* ")).append_text(k).append_text(
-                    Text(f": {value[1]}\n", style=Style(color="dark_orange"))
+                    Text(f"{value[1]}\n", style=Style(color="dark_orange"))
                 )
         text.rstrip()
 
