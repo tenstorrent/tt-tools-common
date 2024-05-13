@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.3 - 14/05/2024
+
+### Added
+- ARM platform check and warning for WH device resets in compatibility menu
+- Added check for WH device init after reset and prompt user to reboot host if chips are still non recoverable
+- Bumped textual (0.59.0) and luwen (0.3.8) lib versions
+
 ## 1.4.2 - 04/04/2024
 
 ### Added
