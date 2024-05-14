@@ -95,9 +95,9 @@ class WHChipReset:
         fail = False
         # Trigger resets for all chips in order
         for chip in pci_chips:
-            # Init the chip to get the chip to a known state and throw exception if it fails
+            # Collect the arc refclk for the chip before sending reset arc messages
             try:
-                chip.init()
+                refclk_list.append(read_refclk_counter(chip))
             except Exception as e:
                 # If we get to this point means ioctl reset isn't enough to reset the chip
                 # This is a fatal error, we should exit and recommend user to reboot the system
@@ -107,9 +107,6 @@ class WHChipReset:
                     CMD_LINE_COLOR.ENDC,
                 )
                 sys.exit(1)
-
-            # Collect the arc refclk for the chip before sending reset arc messages
-            refclk_list.append(read_refclk_counter(chip))
             # Trigger A3 safe state. A3 is a safe state where there are no more pending regulator requests.
             chip.arc_msg(self.MSG_TYPE_ARC_STATE3, wait_for_done=True)
             time.sleep(self.A3_STATE_PROP_TIME)
