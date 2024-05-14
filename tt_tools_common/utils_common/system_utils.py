@@ -131,7 +131,20 @@ def system_compatibility() -> dict:
         checklist["Memory"] = (True, "Pass")
     else:
         checklist["Memory"] = (False, "Recommended 32GB+")
-    print(checklist)
+
+    # Due do how ARM pcie device rescans are handled, we can't perform a wormhole reset on ARM systems
+    if host_info["Platform"].startswith("arm") or host_info["Platform"].startswith(
+        "aarch"
+    ):
+        checklist["WH Reset"] = (
+            False,
+            "Not supported on ARM",
+        )
+    else:
+        checklist["WH Reset"] = (True, "Pass")
+
+    # GS reset is supported on all systems since it doesn't depend on a pcie re-scan
+    checklist["GS Reset"] = (True, "Pass")
     return checklist
 
 
