@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.4 - 21/06/2024
+
+### Added
+- Version bump of python dependencies in pyproject.toml (dependabot)
+    - requests (2.31.0 -> 2.32.0)
+    - tqdm (4.66.1 -> 4.66.3)
+- Pydantic library version bump (1.* -> >=1.2) to resolve: [TT-SMI issue #27](https://github.com/tenstorrent/tt-smi/issues/27)
+
 ## 1.4.3 - 14/05/2024
 
 ### Added
