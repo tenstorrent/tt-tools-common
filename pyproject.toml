@@ -32,7 +32,7 @@ dependencies = [
   'textual==0.59.0',
   'requests==2.31.0',
   'jsons==1.6.3',
-  'tqdm==4.66.1',
+  'tqdm==4.66.3',
   "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.3.8#subdirectory=crates/pyluwen",
 ]
 
