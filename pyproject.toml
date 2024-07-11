@@ -33,13 +33,13 @@ dependencies = [
   'requests==2.32.0',
   'jsons==1.6.3',
   'tqdm==4.66.3',
-  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.3.8#subdirectory=crates/pyluwen",
   'pydantic>=1.2',
 ]
 
 optional-dependencies.dev = [
   'black==23.11.0',
   'pre-commit==3.5.0',
+  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.3.11#subdirectory=crates/pyluwen",
 ]
 
 [project.urls]
