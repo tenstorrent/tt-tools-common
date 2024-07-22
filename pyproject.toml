@@ -1,6 +1,6 @@
 [project]
 name = "tt-tools-common"
-version = "1.4.5"
+version = "1.4.6"
 description = "Common library for Tenstorrent tooling"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -39,7 +39,7 @@ dependencies = [
 optional-dependencies.dev = [
   'black==23.11.0',
   'pre-commit==3.5.0',
-  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.3.11#subdirectory=crates/pyluwen",
+  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.4.0#subdirectory=crates/pyluwen",
 ]
 
 [project.urls]
