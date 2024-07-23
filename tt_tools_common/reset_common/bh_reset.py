@@ -100,17 +100,31 @@ class BHChipReset:
         # check command.memory in config space to see if reset bit is set
             # 0 means config space reset happened correctly
             # 1 means config space reset didn't go through correctly 
-        for pci_interface in pci_interfaces:
-            file = open(f'/sys/bus/pci/devices/{pci_bdf}/config', 'rb')
-            command_memory_byte =  os.pread(file.fileno(), 1, 4)
-            print(f"command_memory_byte: {command_memory_byte}")
-            reset_bit = (int.from_bytes(command_memory_byte, byteorder='little') >> 1) & 1
-            print(f"reset_bit: {reset_bit}")
-            if reset_bit == 0:
-                print(f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}")
-            else:
-                print(f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}")
 
+        completed = 0
+        files = []
+        for pci_interface in pci_interfaces:
+            files.append(open(f'/sys/bus/pci/devices/{pci_bdf}/config', 'rb'))
+
+        elapsed = 0
+        start_time = time.time()
+        while elapsed < self.POST_RESET_MSG_WAIT_TIME:
+            for file in files:
+                command_memory_byte =  os.pread(file.fileno(), 1, 4)
+                print(f"command_memory_byte: {command_memory_byte}")
+                reset_bit = (int.from_bytes(command_memory_byte, byteorder='little') >> 1) & 1
+                print(f"reset_bit: {reset_bit}")
+                if reset_bit == 0:
+                    print(f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}")
+                    completed += 1
+                else:
+                    print(f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}")
+
+            if completed == len(files):
+                break
+
+            time.sleep(0.001)
+            elapsed = time.time() - start_time
 
         for pci_interface in pci_interfaces:
             self.reset_device_ioctl(
