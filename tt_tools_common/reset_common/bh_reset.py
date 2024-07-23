@@ -102,30 +102,31 @@ class BHChipReset:
             # 1 means config space reset didn't go through correctly 
 
         completed = 0
-        files = []
-        for pci_interface in pci_interfaces:
-            files.append(open(f'/sys/bus/pci/devices/{pci_bdf}/config', 'rb'))
-
+        files_map = {pci_interface: open(f'/sys/bus/pci/devices/{pci_bdf_list[pci_interface]}/config', 'rb') for pci_interface in pci_interfaces}
+        
         elapsed = 0
         start_time = time.time()
+        # Map of pci interface to reset bit
+        reset_bit_map = {pci_interface: 1 for pci_interface in pci_interfaces}
         while elapsed < self.POST_RESET_MSG_WAIT_TIME:
-            for file in files:
+            for pci_interface, file in files_map.items():
                 command_memory_byte =  os.pread(file.fileno(), 1, 4)
-                print(f"command_memory_byte: {command_memory_byte}")
                 reset_bit = (int.from_bytes(command_memory_byte, byteorder='little') >> 1) & 1
-                print(f"reset_bit: {reset_bit}")
-                if reset_bit == 0:
-                    print(f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}")
-                    completed += 1
-                else:
-                    print(f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}")
-
-            if completed == len(files):
+                # Overwrite to store the last value
+                reset_bit_map[pci_interface] = reset_bit
+            if completed == len(files_map.values()):
                 break
-
             time.sleep(0.001)
             elapsed = time.time() - start_time
 
+        # Check the last value of all the reset bits and report if any of them are not 0
+        for pci_interface in pci_interfaces:
+            if reset_bit_map[pci_interface] == 0:
+                print(f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}")
+                completed += 1
+            else:
+                print(f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}")
+        
         for pci_interface in pci_interfaces:
             self.reset_device_ioctl(
                 pci_interface, self.TENSTORRENT_RESET_DEVICE_RESTORE_STATE
