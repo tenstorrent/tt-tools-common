@@ -68,13 +68,13 @@ class BHChipReset:
         # TODO: FOR BH Check the driver version and bail if link reset cannot be supported 
         # check_driver_version(operation="board reset")
 
-        # Due to how ARM systems deal with pcie device rescans, WH device resets don't work on that platform.
-        # Check for platform and bail if it's ARM
+        # Due to how Arm systems deal with pcie device rescans, WH device resets don't work on that platform.
+        # Check for platform and bail if it's Arm
         platform = get_host_info()["Platform"]
         if platform.startswith("arm") or platform.startswith("aarch"):
             print(
                 CMD_LINE_COLOR.RED,
-                "Cannot perform WH board reset on ARM systems, please reboot the system to reset the boards. Exiting...",
+                "Cannot perform WH board reset on Arm systems, please reboot the system to reset the boards. Exiting...",
                 CMD_LINE_COLOR.ENDC,
             )
             sys.exit(1)
