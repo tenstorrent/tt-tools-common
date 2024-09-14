@@ -117,11 +117,11 @@ def system_compatibility() -> dict:
             if distro_version >= 20.04:
                 checklist["OS"] = (True, "Pass")
             else:
-                checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
+                checklist["OS"] = (False, "Recommend Ubuntu 20.04+")
         else:
-            checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
+            checklist["OS"] = (False, "Recommend Ubuntu 20.04+")
     else:
-        checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
+        checklist["OS"] = (False, "Recommend Ubuntu 20.04+")
 
     if host_info["Driver"]:
         checklist["Driver"] = (True, "Pass")
@@ -130,7 +130,7 @@ def system_compatibility() -> dict:
     if psutil.virtual_memory().total >= 32 * 1e9:
         checklist["Memory"] = (True, "Pass")
     else:
-        checklist["Memory"] = (False, "Recommended 32GB+")
+        checklist["Memory"] = (False, "Recommend 32GB+")
 
     # Due do how ARM pcie device rescans are handled, we can't perform a wormhole reset on ARM systems
     if host_info["Platform"].startswith("arm") or host_info["Platform"].startswith(
