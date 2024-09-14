@@ -164,6 +164,9 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         "Buda": "N/A",
         "Metallium": "N/A",
     }
+    if not show_sw_ver:
+        return sw_ver
+
     version = {}
     for board_id in board_ids:
         url = "https://cereal.tenstorrent.com?SerialNumber=" + board_id
@@ -196,7 +199,4 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         except requests.exceptions.RequestException:
             version["Failed to fetch"] = "Something unexpected happened."
 
-    if show_sw_ver:
-        return version
-
-    return sw_ver
+    return version
