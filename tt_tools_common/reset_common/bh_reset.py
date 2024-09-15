@@ -79,11 +79,11 @@ class BHChipReset:
             )
             sys.exit(1)
 
-        # Remove duplicates from the input list of pci interfaces
+        # Remove duplicates from the input list of PCI interfaces
         pci_interfaces = list(set(pci_interfaces))
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Starting pci link reset on BH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Starting PCI link reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
         
         pci_bdf_list = {}
@@ -106,7 +106,7 @@ class BHChipReset:
         
         elapsed = 0
         start_time = time.time()
-        # Map of pci interface to reset bit
+        # Map of PCI interface to reset bit
         reset_bit_map = {pci_interface: 1 for pci_interface in pci_interfaces}
         while elapsed < self.POST_RESET_MSG_WAIT_TIME:
             for pci_interface, file in files_map.items():
@@ -135,7 +135,7 @@ class BHChipReset:
         # other sanity checks go here
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Finishing pci link reset on BH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Finishing PCI link reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
         
         pci_chips = [PciChip(pci_interface=interface) for interface in pci_interfaces]
