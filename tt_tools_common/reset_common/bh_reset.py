@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This file contains functions used to do a pcie level reset for Wormhole chip.
+This file contains functions used to do a PCIe level reset for Wormhole chip.
 """
 
 import os
@@ -20,7 +20,7 @@ from tt_tools_common.utils_common.system_utils import (
 )
 
 class BHChipReset:
-    """Class to perform a chip level reset on WH pcie boards"""
+    """Class to perform a chip level reset on WH PCIe boards"""
 
     # WH magic numbers for reset
     TENSTORRENT_IOCTL_MAGIC = 0xFA
@@ -68,7 +68,7 @@ class BHChipReset:
         # TODO: FOR BH Check the driver version and bail if link reset cannot be supported 
         # check_driver_version(operation="board reset")
 
-        # Due to how Arm systems deal with pcie device rescans, WH device resets don't work on that platform.
+        # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
         # Check for platform and bail if it's Arm
         platform = get_host_info()["Platform"]
         if platform.startswith("arm") or platform.startswith("aarch"):
