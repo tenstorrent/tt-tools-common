@@ -132,7 +132,7 @@ def system_compatibility() -> dict:
     else:
         checklist["Memory"] = (False, "Recommended 32GB+")
 
-    # Due do how Arm PCIe device rescans are handled, we can't perform a wormhole reset on Arm systems
+    # Due do how Arm PCIe device rescans are handled, we can't perform a Wormhole reset on Arm systems
     if host_info["Platform"].startswith("arm") or host_info["Platform"].startswith(
         "aarch"
     ):
