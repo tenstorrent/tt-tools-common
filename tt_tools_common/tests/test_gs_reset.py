@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
 """
-Reset test for gs tensix reset
+Reset test for gs Tensix reset
 """
 from pyluwen import detect_chips
 from tt_tools_common.reset_common.gs_tensix_reset import GSTensixReset
