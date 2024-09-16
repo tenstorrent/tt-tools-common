@@ -357,7 +357,7 @@ class GSTensixReset:
     def all_riscs_deassert_hard_reset(self):
         """
         Deassert riscv hard resets. We use a mask to get the un-harvested Tensix cores.
-        We only deassert this on un-harvested Tensix cores because un-harvested Tensix cores recieved the soft reset signal
+        We only deassert this on un-harvested Tensix cores because un-harvested Tensix cores received the soft reset signal
         The harvested Tensix cores need to stay in a state of hard reset.
         """
         for index, mask in enumerate(self.all_tensix_reset_mask()):
