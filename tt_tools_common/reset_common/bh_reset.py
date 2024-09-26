@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This file contains functions used to do a pcie level reset for Wormhole chip.
+This file contains functions used to do a PCIe level reset for Wormhole chip.
 """
 
 import os
@@ -20,7 +20,7 @@ from tt_tools_common.utils_common.system_utils import (
 )
 
 class BHChipReset:
-    """Class to perform a chip level reset on WH pcie boards"""
+    """Class to perform a chip level reset on WH PCIe boards"""
 
     # WH magic numbers for reset
     TENSTORRENT_IOCTL_MAGIC = 0xFA
@@ -68,22 +68,22 @@ class BHChipReset:
         # TODO: FOR BH Check the driver version and bail if link reset cannot be supported 
         # check_driver_version(operation="board reset")
 
-        # Due to how ARM systems deal with pcie device rescans, WH device resets don't work on that platform.
-        # Check for platform and bail if it's ARM
+        # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
+        # Check for platform and bail if it's Arm
         platform = get_host_info()["Platform"]
         if platform.startswith("arm") or platform.startswith("aarch"):
             print(
                 CMD_LINE_COLOR.RED,
-                "Cannot perform WH board reset on ARM systems, please reboot the system to reset the boards. Exiting...",
+                "Cannot perform WH board reset on Arm systems, please reboot the system to reset the boards. Exiting...",
                 CMD_LINE_COLOR.ENDC,
             )
             sys.exit(1)
 
-        # Remove duplicates from the input list of pci interfaces
+        # Remove duplicates from the input list of PCI interfaces
         pci_interfaces = list(set(pci_interfaces))
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Starting pci link reset on BH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Starting PCI link reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
         
         pci_bdf_list = {}
@@ -106,7 +106,7 @@ class BHChipReset:
         
         elapsed = 0
         start_time = time.time()
-        # Map of pci interface to reset bit
+        # Map of PCI interface to reset bit
         reset_bit_map = {pci_interface: 1 for pci_interface in pci_interfaces}
         while elapsed < self.POST_RESET_MSG_WAIT_TIME:
             for pci_interface, file in files_map.items():
@@ -135,7 +135,7 @@ class BHChipReset:
         # other sanity checks go here
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Finishing pci link reset on BH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Finishing PCI link reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
         
         pci_chips = [PciChip(pci_interface=interface) for interface in pci_interfaces]

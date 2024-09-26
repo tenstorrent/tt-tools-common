@@ -1,6 +1,6 @@
 # TT-TOOLS-COMMON
 
-This is a space for common utilities shared across Tentorrent tools.
+This is a space for common utilities shared across Tenstorrent tools.
 This is a helper library and not a standalone tool.
 
 ## Official Repository
@@ -32,9 +32,9 @@ pre-commit install
 
 # Usage
 
-This repo contains both frontend and backend functions that would be common to most tentorrent tooling.
+This repo contains both frontend and backend functions that would be common to most Tenstorrent tooling.
 ## Frontend
-It includes common themes, widgets and other styling elements to build tenstorrent textual tools.
+It includes common themes, widgets and other styling elements to build Tenstorrent textual tools.
 Under the tests directory is an example textual widget that can be used as a starting place for developers to build a new tool.
 
 ## Backend

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This file contains functions used to do a pcie level reset for Wormhole chip.
+This file contains functions used to do a PCIe level reset for Wormhole chip.
 """
 
 import os
@@ -21,7 +21,7 @@ from tt_tools_common.utils_common.system_utils import (
 
 
 class WHChipReset:
-    """Class to perform a chip level reset on WH pcie boards"""
+    """Class to perform a chip level reset on WH PCIe boards"""
 
     # WH magic numbers for reset
     TENSTORRENT_IOCTL_MAGIC = 0xFA
@@ -68,22 +68,22 @@ class WHChipReset:
         # Check the driver version and bail if link reset cannot be supported
         check_driver_version(operation="board reset")
 
-        # Due to how ARM systems deal with pcie device rescans, WH device resets don't work on that platform.
-        # Check for platform and bail if it's ARM
+        # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
+        # Check for platform and bail if it's Arm
         platform = get_host_info()["Platform"]
         if platform.startswith("arm") or platform.startswith("aarch"):
             print(
                 CMD_LINE_COLOR.RED,
-                "Cannot perform WH board reset on ARM systems, please reboot the system to reset the boards. Exiting...",
+                "Cannot perform WH board reset on Arm systems, please reboot the system to reset the boards. Exiting...",
                 CMD_LINE_COLOR.ENDC,
             )
             sys.exit(1)
 
-        # Remove duplicates from the input list of pci interfaces
+        # Remove duplicates from the input list of PCI interfaces
         pci_interfaces = list(set(pci_interfaces))
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Starting pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Starting PCI link reset on WH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
 
         for pci_interface in pci_interfaces:
@@ -126,7 +126,7 @@ class WHChipReset:
             if refclk_list[i] < current_refclk:
                 print(
                     CMD_LINE_COLOR.RED,
-                    f"Reset for pci {pci_interface} didn't go through! Refclk didn't reset. Value before: {refclk_list[i]}, value after: {current_refclk}",
+                    f"Reset for PCI {pci_interface} didn't go through! Refclk didn't reset. Value before: {refclk_list[i]}, value after: {current_refclk}",
                     CMD_LINE_COLOR.ENDC,
                 )
                 fail = True
@@ -142,7 +142,7 @@ class WHChipReset:
             #  All went well print success message
             if not silent:
                 print(
-                    f"{CMD_LINE_COLOR.GREEN} Finishing pci link reset on WH devices at pci indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                    f"{CMD_LINE_COLOR.GREEN} Finishing PCI link reset on WH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
                 )
 
         return pci_chips

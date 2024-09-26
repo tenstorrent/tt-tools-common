@@ -21,7 +21,7 @@ LOG_FOLDER = os.path.expanduser("~/.config/tenstorrent")
 def generate_reset_logs(devices, result_filename: str = None):
     """
     Generate and save reset logs
-    Separate pci indexes for gs and wh devices
+    Separate PCI indexes for gs and wh devices
     Generate a reset log with a sample mobo reset config
     """
 
@@ -67,7 +67,7 @@ def generate_reset_logs(devices, result_filename: str = None):
 
 
 def parse_reset_input(value):
-    """Validate the reset inputs - either list of int pci IDs or a json config file"""
+    """Validate the reset inputs - either list of int PCI IDs or a json config file"""
     try:
         # Attempt to parse as a JSON file
         with open(value, "r") as json_file:

@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 1.4.3 - 14/05/2024
 
 ### Added
-- ARM platform check and warning for WH device resets in compatibility menu
+- Arm platform check and warning for WH device resets in compatibility menu
 - Added check for WH device init after reset and prompt user to reboot host if chips are still non recoverable
 - Bumped textual (0.59.0) and luwen (0.3.8) lib versions
 
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 1.3.0 - 06/03/2024
 
 ### Added
-- Migrated GS tensix reset to tools_common
+- Migrated GS Tensix reset to tools_common
 - Migrated all related GS data files
 - Functions to fetch arc and eth fw versions from telemetry
 - Unit tests for all device resets
@@ -86,4 +86,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 First release of opensource tt-smi
 
 ### Added
-- GS support and tensix reset support
+- GS support and Tensix reset support

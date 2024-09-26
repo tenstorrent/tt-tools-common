@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This file contains functions used to reset tensix cores on a Grayskull chip.
+This file contains functions used to reset Tensix cores on a Grayskull chip.
 """
 
 import os
@@ -16,10 +16,10 @@ from tt_tools_common.utils_common.tools_utils import init_fw_defines, int_to_bit
 
 class GSTensixReset:
     """
-    This class is used to reset tensix cores on a GS chip.
+    This class is used to reset Tensix cores on a GS chip.
     """
 
-    # GS Magic numbers for tensix resetting and NOC setup
+    # GS Magic numbers for Tensix resetting and NOC setup
     NIU_CFG_0 = 0x100  # bit 0 is CG enable, bit 12 is tile clock disable
     ROUTER_CFG_0 = 0x104  # bit 0 is CG enable
 
@@ -98,7 +98,7 @@ class GSTensixReset:
 
     def get_core_list(self):
         """
-        Using the harvesting fuses, get a list of tensix cores that are not harvested.
+        Using the harvesting fuses, get a list of Tensix cores that are not harvested.
 
         Returns:
             Dict of cores that are not harvested
@@ -143,7 +143,7 @@ class GSTensixReset:
     def set_safe_clks(self, enter_safe_clks: bool):
         """
         Send arc msg to enter safe clks mode.
-        It lowers the clks to a safe level to toggle tensix resets
+        It lowers the clks to a safe level to toggle Tensix resets
         """
         if enter_safe_clks:
             self.device.arc_msg(
@@ -170,9 +170,9 @@ class GSTensixReset:
 
     def tensix_toggle_reset(self):
         """
-        Put all tensix's into hard reset and takes them out again.
+        Put all Tensix cores into hard reset and takes them out again.
         This requires set_safe_clks to be run prior.
-        This includes both harvested and non-harvested tensix's because we need all tensix's NOC routers.
+        This includes both harvested and non-harvested Tensix cores because we need all Tensix cores' NOC routers.
         """
         for i in range(8):
             self.axi_registers.write32(f"ARC_RESET.TENSIX_RESET[{i}]", 0x0)
@@ -181,7 +181,7 @@ class GSTensixReset:
 
     def is_tensix_core_loc(self, x, y):
         """
-        Checks if the given noc 0 coordinate is a tensix core.
+        Checks if the given noc 0 coordinate is a Tensix core.
         """
         return (x, y) in self.core_list
 
@@ -189,7 +189,7 @@ class GSTensixReset:
         """
         This configures all NOC notes.
         It sets broadcast disables, CG enables, and maximum exponential backoff.
-        It activates the tile clk disable for harvested tensix's.
+        It activates the tile clk disable for harvested Tensix cores.
         """
         self.axi_registers.write_fields(
             "ARC_RESET.DDR_RESET", {"axi_reset": 1, "ddrc_reset": 1}, init=0
@@ -320,7 +320,7 @@ class GSTensixReset:
     def assert_all_riscv_soft_reset(self):
         """
         Assert all riscv soft resets using a noc broadcast.
-        This reset includes only un-harvested tensix's.
+        This reset includes only un-harvested Tensix cores.
         """
         device = self.device.as_gs()
         BRISC_SOFT_RESET = 1 << 11
@@ -332,7 +332,7 @@ class GSTensixReset:
 
     def noc_loc_to_reset_mask(self, noc_x, noc_y):
         """
-        Get the reset bit location for a specific tensix core.
+        Get the reset bit location for a specific Tensix core.
         This applies to both RISCV_RESET and TENSIX_RESET registers.
         """
         phys_x, phys_y = self.ROUTING_TO_PHYSICAL_TABLE[(noc_x, noc_y)]
@@ -344,7 +344,7 @@ class GSTensixReset:
 
     def all_tensix_reset_mask(self):
         """
-        Get the reset mask for un-harvested tensix cores.
+        Get the reset mask for un-harvested Tensix cores.
         """
         reset_mask = [0] * 8
 
@@ -356,16 +356,16 @@ class GSTensixReset:
 
     def all_riscs_deassert_hard_reset(self):
         """
-        Deassert riscv hard resets. We use a mask to get the un-harvested tensix's.
-        We only deassert this on un-harvested tensix's because un-harvested tensix's recieved the soft reset signal
-        The harvested tensix's need to stay in a state of hard reset.
+        Deassert riscv hard resets. We use a mask to get the un-harvested Tensix cores.
+        We only deassert this on un-harvested Tensix cores because un-harvested Tensix cores received the soft reset signal
+        The harvested Tensix cores need to stay in a state of hard reset.
         """
         for index, mask in enumerate(self.all_tensix_reset_mask()):
             self.axi_registers.write32(f"ARC_RESET.RISCV_RESET[{index}]", mask)
 
     def tensix_reset(self, silent=False) -> None:
         """
-        This resets all tensix cores on a GS chip, leaving the un-harvested risc's in soft reset.
+        This resets all Tensix cores on a GS chip, leaving the un-harvested risc's in soft reset.
         """
         if not silent:
             print(
