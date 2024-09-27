@@ -161,8 +161,8 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         "tt-smi": "N/A",
         "tt-flash": "N/A",
         "tt-kmd": "N/A",
-        "Buda": "N/A",
-        "Metallium": "N/A",
+        "TT-Buda": "N/A",
+        "TT-Metalium": "N/A",
     }
     version = {}
     for board_id in board_ids:
@@ -181,6 +181,11 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
                         if isinstance(value, str) and isinstance(key, str):
                             version.update({key: value})
                     version.update({"Buda": "0.9.80", "Metallium": "0.42.0"})
+                    # Fix up the keys with user-facing names
+                    version["TT-Metalium"] = version["Metallium"]
+                    del version["Metallium"]
+                    version["TT-Buda"] = version["Buda"]
+                    del version["Buda"]
                 else:
                     version["Failed to fetch"] = "Unexpected response from server"
         except requests.exceptions.HTTPError:
