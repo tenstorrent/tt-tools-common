@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.8 - 11/10/2024
+
+### Changed
+- Updated reset completion logic to handle the case where the bmfw needs to upgrade itself
+
 ## 1.4.7 - 11/10/2024
 
 ### Added

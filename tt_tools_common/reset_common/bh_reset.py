@@ -89,6 +89,8 @@ class BHChipReset:
 
         pci_bdf_list = {}
 
+        post_reset_wait = self.POST_RESET_MSG_WAIT_TIME
+
         # Collect device bdf and trigger resets for all BH chips in order
         for pci_interface in pci_interfaces:
             # TODO: Make this check fallible
@@ -96,6 +98,8 @@ class BHChipReset:
             pci_bdf = chip.get_pci_bdf()
             pci_bdf_list[pci_interface] = pci_bdf
             if reset_m3:
+                # A full bmfw upgrade can take awhile
+                post_reset_wait = 60
                 chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False, arg0=3)
             else:
                 self.reset_device_ioctl(
@@ -116,24 +120,42 @@ class BHChipReset:
 
         elapsed = 0
         start_time = time.time()
-        # Map of PCI interface to reset bit
-        reset_bit_map = {pci_interface: 1 for pci_interface in pci_interfaces}
-        while elapsed < self.POST_RESET_MSG_WAIT_TIME:
+        all_start_time = None
+        # Map of pci interface to reset bit
+        reset_complete_bit_map = {
+            pci_interface: False for pci_interface in pci_interfaces
+        }
+        can_early_exit = False
+
+        print(
+            f"Waiting for up to {post_reset_wait} seconds for asic to come back after reset"
+        )
+        while elapsed < post_reset_wait:
             for pci_interface, file in files_map.items():
                 command_memory_byte = os.pread(file.fileno(), 1, 4)
                 reset_bit = (
                     int.from_bytes(command_memory_byte, byteorder="little") >> 1
                 ) & 1
                 # Overwrite to store the last value
-                reset_bit_map[pci_interface] = reset_bit
-            if completed == len(files_map.values()):
-                break
+                reset_complete_bit_map[pci_interface] = (
+                    True if reset_bit == 0 else False
+                )
+
+            # During bmfw upgrade it may take awhile for the asic to go down after sending the message.
+            # So to be safe only early exit if we know the asic has actually gone into reset
+            if not all(reset_complete_bit_map.values()):
+                can_early_exit = True
+
+            if all(reset_complete_bit_map.values()):
+                if can_early_exit:
+                    break
+
             time.sleep(0.001)
             elapsed = time.time() - start_time
 
         # Check the last value of all the reset bits and report if any of them are not 0
         for pci_interface in pci_interfaces:
-            if reset_bit_map[pci_interface] == 0:
+            if reset_complete_bit_map[pci_interface]:
                 print(
                     f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}"
                 )
