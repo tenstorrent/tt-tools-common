@@ -19,6 +19,7 @@ from tt_tools_common.utils_common.system_utils import (
     get_host_info,
 )
 
+
 class BHChipReset:
     """Class to perform a chip level reset on WH PCIe boards"""
 
@@ -65,7 +66,7 @@ class BHChipReset:
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
-        # TODO: FOR BH Check the driver version and bail if link reset cannot be supported 
+        # TODO: FOR BH Check the driver version and bail if link reset cannot be supported
         # check_driver_version(operation="board reset")
 
         # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
@@ -85,9 +86,9 @@ class BHChipReset:
             print(
                 f"{CMD_LINE_COLOR.BLUE} Starting PCI link reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
-        
+
         pci_bdf_list = {}
-       
+
         # Collect device bdf and trigger resets for all BH chips in order
         for pci_interface in pci_interfaces:
             # TODO: Make this check fallible
@@ -102,20 +103,27 @@ class BHChipReset:
                 )
 
         # check command.memory in config space to see if reset bit is set
-            # 0 means config space reset happened correctly
-            # 1 means config space reset didn't go through correctly 
+        # 0 means config space reset happened correctly
+        # 1 means config space reset didn't go through correctly
 
         completed = 0
-        files_map = {pci_interface: open(f'/sys/bus/pci/devices/{pci_bdf_list[pci_interface]}/config', 'rb') for pci_interface in pci_interfaces}
-        
+        files_map = {
+            pci_interface: open(
+                f"/sys/bus/pci/devices/{pci_bdf_list[pci_interface]}/config", "rb"
+            )
+            for pci_interface in pci_interfaces
+        }
+
         elapsed = 0
         start_time = time.time()
         # Map of PCI interface to reset bit
         reset_bit_map = {pci_interface: 1 for pci_interface in pci_interfaces}
         while elapsed < self.POST_RESET_MSG_WAIT_TIME:
             for pci_interface, file in files_map.items():
-                command_memory_byte =  os.pread(file.fileno(), 1, 4)
-                reset_bit = (int.from_bytes(command_memory_byte, byteorder='little') >> 1) & 1
+                command_memory_byte = os.pread(file.fileno(), 1, 4)
+                reset_bit = (
+                    int.from_bytes(command_memory_byte, byteorder="little") >> 1
+                ) & 1
                 # Overwrite to store the last value
                 reset_bit_map[pci_interface] = reset_bit
             if completed == len(files_map.values()):
@@ -126,11 +134,15 @@ class BHChipReset:
         # Check the last value of all the reset bits and report if any of them are not 0
         for pci_interface in pci_interfaces:
             if reset_bit_map[pci_interface] == 0:
-                print(f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}")
+                print(
+                    f"{CMD_LINE_COLOR.GREEN} Config space reset completed for device {pci_interface} {CMD_LINE_COLOR.ENDC}"
+                )
                 completed += 1
             else:
-                print(f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}")
-        
+                print(
+                    f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}"
+                )
+
         for pci_interface in pci_interfaces:
             self.reset_device_ioctl(
                 pci_interface, self.TENSTORRENT_RESET_DEVICE_RESTORE_STATE
@@ -141,6 +153,6 @@ class BHChipReset:
             print(
                 f"{CMD_LINE_COLOR.BLUE} Finishing PCI link reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
-        
+
         pci_chips = [PciChip(pci_interface=interface) for interface in pci_interfaces]
         return pci_chips

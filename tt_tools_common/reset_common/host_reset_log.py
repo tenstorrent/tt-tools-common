@@ -11,6 +11,7 @@ import base64
 import inspect
 import datetime
 from pathlib import Path
+
 try:
     # Try the newer v2 pydantic and use that first
     from pydantic.v1 import BaseModel
@@ -24,16 +25,13 @@ except:
 from typing import Any, Union, List, TypeVar, Generic
 
 
-class Long(int):
-    ...
+class Long(int): ...
 
 
-class Keyword(str):
-    ...
+class Keyword(str): ...
 
 
-class Text(str):
-    ...
+class Text(str): ...
 
 
 class Date(datetime.datetime):
@@ -145,8 +143,7 @@ class ElasticModel(BaseModel):
 T = TypeVar("T", bound=ElasticModel)
 
 
-class Nested(list, Generic[T]):
-    ...
+class Nested(list, Generic[T]): ...
 
 
 @optional

@@ -191,13 +191,13 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         except requests.exceptions.HTTPError:
             version["Failed to fetch"] = "We encountered an HTTP error."
         except requests.exceptions.ConnectionError:
-            version[
-                "Failed to fetch"
-            ] = "There was an error connecting to the server. Please check your internet connection."
+            version["Failed to fetch"] = (
+                "There was an error connecting to the server. Please check your internet connection."
+            )
         except requests.exceptions.Timeout:
-            version[
-                "Failed to fetch"
-            ] = "Timeout error. It seems the server is taking too long to respond."
+            version["Failed to fetch"] = (
+                "Timeout error. It seems the server is taking too long to respond."
+            )
         except requests.exceptions.RequestException:
             version["Failed to fetch"] = "Something unexpected happened."
 

@@ -6,6 +6,7 @@ Reset test for BH Tensix reset
 from pyluwen import detect_chips
 from tt_tools_common.reset_common.bh_reset import BHChipReset
 
+
 def main():
     bh_pci_idx = []
     devices = detect_chips()
