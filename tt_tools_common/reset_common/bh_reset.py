@@ -90,12 +90,16 @@ class BHChipReset:
        
         # Collect device bdf and trigger resets for all BH chips in order
         for pci_interface in pci_interfaces:
-            # TODO: Make this check fallible 
-            pci_bdf = PciChip(pci_interface=pci_interface).get_pci_bdf()
+            # TODO: Make this check fallible
+            chip = PciChip(pci_interface=pci_interface)
+            pci_bdf = chip.get_pci_bdf()
             pci_bdf_list[pci_interface] = pci_bdf
-            self.reset_device_ioctl(
-                pci_interface, self.TENSTORRENT_RESET_DEVICE_CONFIG_WRITE
-            )
+            if reset_m3:
+                chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False, arg0=3)
+            else:
+                self.reset_device_ioctl(
+                    pci_interface, self.TENSTORRENT_RESET_DEVICE_CONFIG_WRITE
+                )
 
         # check command.memory in config space to see if reset bit is set
             # 0 means config space reset happened correctly
