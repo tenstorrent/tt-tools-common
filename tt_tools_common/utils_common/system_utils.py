@@ -59,7 +59,7 @@ def check_driver_version(
             CMD_LINE_COLOR.ENDC,
         )
         sys.exit(1)
-    if int(driver.split(".")[1]) < minimum_driver_version:
+    if int(driver.split("-")[0].split(".")[1]) < minimum_driver_version:
         print(
             CMD_LINE_COLOR.RED,
             f"Current driver version: {driver}",
