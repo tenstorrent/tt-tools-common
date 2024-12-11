@@ -111,6 +111,7 @@ class BHChipReset:
         # 1 means config space reset didn't go through correctly
 
         completed = 0
+        failures = 0
         files_map = {
             pci_interface: open(
                 f"/sys/bus/pci/devices/{pci_bdf_list[pci_interface]}/config", "rb"
@@ -164,11 +165,16 @@ class BHChipReset:
                 print(
                     f"{CMD_LINE_COLOR.RED} Config space reset not completed for device {pci_interface}! {CMD_LINE_COLOR.ENDC}"
                 )
+                failures += 1
 
         for pci_interface in pci_interfaces:
             self.reset_device_ioctl(
                 pci_interface, self.TENSTORRENT_RESET_DEVICE_RESTORE_STATE
             )
+
+        if failures > 0:
+            sys.exit(failures)
+
         #  All went well print success message
         # other sanity checks go here
         if not silent:
