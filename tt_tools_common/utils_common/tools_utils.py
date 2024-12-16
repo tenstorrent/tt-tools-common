@@ -251,6 +251,7 @@ def get_eth_fw_version(chip) -> str:
 def detect_chips_with_callback(
     local_only: bool = False,
     ignore_ethernet: bool = False,
+    print_status: bool = True,
 ) -> List[PciChip]:
     """
     This will create a chip which only guarantees that you have communication with the chip.
@@ -274,20 +275,21 @@ def detect_chips_with_callback(
         chip_count = max(chip_count, 0)
 
         # Move the cursor and delete the previous block of printed lines
-        if block_count > 0:
+        if block_count > 0 and print_status:
             print(f"\033[{block_count}A", end="", flush=True)
             print(f"\033[J", end="", flush=True)
 
-        print(
-            f"\r{CMD_LINE_COLOR.PURPLE} Detected Chips: {CMD_LINE_COLOR.YELLOW}{chip_count}{CMD_LINE_COLOR.ENDC}\n",
-            end="",
-            flush=True,
-        )
-        block_count = 1
+        if print_status:
+            print(
+                f"\r{CMD_LINE_COLOR.PURPLE} Detected Chips: {CMD_LINE_COLOR.YELLOW}{chip_count}{CMD_LINE_COLOR.ENDC}\n",
+                end="",
+                flush=True,
+            )
+            block_count = 1
 
         # Prune and update the status string
         status_string = status.status_string()
-        if status_string is not None and local_only is False:
+        if status_string is not None and local_only is False and print_status is True:
             # remove empty lines
             for line in list(filter(None, status_string.splitlines())):
                 # Up the counter for each line printed
