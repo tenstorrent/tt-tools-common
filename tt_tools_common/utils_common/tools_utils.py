@@ -7,7 +7,6 @@ This file contains common utilities used by all tt-tools.
 import os
 import sys
 import time
-import jsons
 from typing import List
 import importlib.resources
 from yaml import safe_load
@@ -232,20 +231,6 @@ def check_refclk_counter_rate(chip, expected_refclk: float, accuracy: float):
         return f"REFCLK_COUNTER outside of allowed range: {observed_refclk}"
     else:
         return None
-
-
-def get_arc_fw_version(chip) -> str:
-    """Get arc fw version from chip telemetry"""
-    return hex_to_semver_m3_fw(
-        jsons.dump(chip.get_telemetry())["smbus_tx_arc0_fw_version"]
-    )
-
-
-def get_eth_fw_version(chip) -> str:
-    """Get eth fw version from chip telemetry"""
-    return hex_to_semver_eth(
-        jsons.dump(chip.get_telemetry())["smbus_tx_eth_fw_version"]
-    )
 
 
 def detect_chips_with_callback(
