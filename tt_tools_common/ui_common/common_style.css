@@ -87,15 +87,18 @@ DataTable>.datatable--hover {
 /* TTMenu Style */
 
 TTMenu,
-TTCompatibilityMenu {
+TTCompatibilityMenu,
+TTHostCompatibilityMenu {
   padding: 1 1;
   border: solid $green;
   color: $green;
 }
-
+/*
+/*
 TTCompatibilityMenu {
   height: 9;
 }
+*/
 
 /* TTConfirmBox Style */
 
