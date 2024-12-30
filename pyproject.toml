@@ -39,7 +39,7 @@ dependencies = [
 optional-dependencies.dev = [
   'black==23.11.0',
   'pre-commit==3.5.0',
-  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.4.0#subdirectory=crates/pyluwen",
+  "pyluwen @ git+https://github.com/tenstorrent/luwen.git@v0.4.9#subdirectory=crates/pyluwen",
 ]
 
 [project.urls]
