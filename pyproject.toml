@@ -31,7 +31,6 @@ dependencies = [
   'rich==13.7.0',
   'textual==0.59.0',
   'requests==2.32.0',
-  'jsons==1.6.3',
   'tqdm==4.66.3',
   'pydantic>=1.2',
 ]
