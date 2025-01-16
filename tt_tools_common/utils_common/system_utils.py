@@ -10,7 +10,7 @@ import psutil
 import distro
 import platform
 import requests
-from typing import Union
+from typing import Union, Tuple, Dict
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
 MINIMUM_DRIVER_VERSION_LDS_RESET = 26
@@ -100,51 +100,63 @@ def get_host_info() -> dict:
         "Platform": uname.machine,
         "Python": platform.python_version(),
         "Memory": get_size(svmem.total),
-        "Driver": "TTKMD " + get_driver_version(),
+        "Driver": "TT-KMD " + get_driver_version(),
     }
 
 
-def system_compatibility() -> dict:
+def get_nr_hugepages() -> str:
+    with open("/proc/sys/vm/nr_hugepages", "r") as f:
+        nr = f.read().rstrip()
+    return nr
+
+
+def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
     """
-    Return compatibility checklist for the system
+    Return host info with system compatibility notes
+
+    Returns dict with str keys per-item. Values are str
+    if the item is fully compatible, or tuple of str if
+    not. The first element is the current state and the
+    second element is the desired or recommended state.
     """
     host_info = get_host_info()
     checklist = {}
+    full_os = f"{host_info['OS']} ({host_info['Platform']})"
+
     if host_info["OS"] == "Linux":
-        if distro.id() == "ubuntu":
-            distro_version = float(".".join(distro.version_parts()[:2]))
-            print(distro_version)
-            if distro_version >= 20.04:
-                checklist["OS"] = (True, "Pass")
-            else:
-                checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
-        else:
-            checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
+        checklist["OS"] = full_os
     else:
-        checklist["OS"] = (False, "Recommended Ubuntu 20.04+")
+        checklist["OS"] = (full_os, "Linux (x86_64)")
+
+    if distro.id() == "ubuntu":
+        distro_version = float(".".join(distro.version_parts()[:2]))
+        if distro_version >= 20.04:
+            checklist["Distro"] = host_info["Distro"]
+        else:
+            checklist["Distro"] = (host_info["Distro"], "20.04 or 22.04")
+    else:
+        checklist["Distro"] = (host_info["Distro"], "Ubuntu 20.04 or 22.04")
+
+    checklist["Kernel"] = host_info["Kernel"]
+    checklist["Hostname"] = host_info["Hostname"]
+    checklist["Python"] = host_info["Python"]
+
+    if psutil.virtual_memory().total >= 32 * 1e9:
+        checklist["Memory"] = host_info["Memory"]
+    else:
+        checklist["Memory"] = (host_info["Memory"], "32GB+")
+
+    nr_hugepages = get_nr_hugepages()
+    if int(nr_hugepages) < 1:
+        checklist["Hugepages"] = (nr_hugepages, "See Quickstart docs")
+    else:
+        checklist["Hugepages"] = nr_hugepages
 
     if host_info["Driver"]:
-        checklist["Driver"] = (True, "Pass")
+        checklist["Driver"] = host_info["Driver"]
     else:
-        checklist["Driver"] = (False, "Fail, no driver")
-    if psutil.virtual_memory().total >= 32 * 1e9:
-        checklist["Memory"] = (True, "Pass")
-    else:
-        checklist["Memory"] = (False, "Recommended 32GB+")
+        checklist["Driver"] = (host_info["Driver"], "TT-KMD v1.27+")
 
-    # Due do how Arm PCIe device rescans are handled, we can't perform a Wormhole reset on Arm systems
-    if host_info["Platform"].startswith("arm") or host_info["Platform"].startswith(
-        "aarch"
-    ):
-        checklist["WH Reset"] = (
-            False,
-            "Not supported on Arm",
-        )
-    else:
-        checklist["WH Reset"] = (True, "Pass")
-
-    # GS reset is supported on all systems since it doesn't depend on a PCIe re-scan
-    checklist["GS Reset"] = (True, "Pass")
     return checklist
 
 

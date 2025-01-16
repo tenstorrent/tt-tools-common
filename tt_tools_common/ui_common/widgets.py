@@ -16,7 +16,7 @@ from rich.style import Style
 from rich.text import Text
 
 from datetime import datetime
-from typing import OrderedDict, List, Tuple, Callable
+from typing import OrderedDict, Dict, List, Tuple, Callable, Union
 
 
 class TTHeader(Widget):
@@ -142,6 +142,78 @@ class TTMenu(Container):
                     Text(f": {value}\n")
                 )
         text.rstrip()
+
+        return text
+
+
+class TTHostCompatibilityMenu(Container):
+    """
+    A custom Menu/List widget for TT-Tools.
+    Used in tt-smi to render Host Info with
+    compatibility notes.
+
+    Accepts dicts with string keys. If items
+    are str, renders each item to a line akin
+    to TTMenu. If item is Tuple of str, renders
+    first item to the first line and second item
+    to another line in red as a note.
+    """
+
+    def __init__(self, id: str, title: str, data: Dict[str, Union[str, Tuple]]) -> None:
+        super().__init__(id=id)
+        self.data = data
+        self.justify_width = max([len(k) for k in self.data.keys()]) + 1
+
+        # Are all values in the dict strings?
+        fully_compatible = all([type(value) is str for value in self.data.values()])
+        if fully_compatible:
+            self.border_title = title + " (Fully Compatible)"
+        else:
+            self.border_title = title + " (Config Warning!)"
+            self.styles.border_title_color = "red"
+
+            self.border_subtitle = "* Recommended Config"
+            self.styles.border_subtitle_color = "red"
+
+    def render(self) -> RenderResult:
+        text = Text()
+        # Track the number of lines to set the widget height
+        num_lines = 0
+        for key, value in self.data.items():
+            line_leader = Text("* ")
+            # Render only one line
+            if type(value) is str:
+                num_lines += 1
+                k = Text(
+                    f"{key.ljust(self.justify_width)}" + ": ",
+                    style=Style(color="#ffd10a", bold=True),
+                )
+                v = Text(f"{value}\n")
+                text.append_text(line_leader).append_text(k).append_text(v)
+            # Render two lines, the current state and the recommendation
+            elif type(value) is tuple:
+                num_lines += 2
+                k = Text(
+                    f"{key.ljust(self.justify_width)}" + ": ",
+                    style=Style(color="#ffd10a", bold=True),
+                )
+                v_1 = Text(f"{value[0]}\n")
+                v_2 = Text(
+                    f"{' ' * (self.justify_width)}  * {value[1]}\n",
+                    style=Style(color="dark_orange"),
+                )
+
+                text.append_text(line_leader).append_text(k).append_text(
+                    v_1
+                ).append_text(v_2)
+            else:
+                # TODO: Raise warning here?
+                pass
+        text.rstrip()
+
+        self.styles.height = (
+            4 + num_lines
+        )  # Dynamically style widget height to fit all recommendations (+4 for border/padding)
 
         return text
 
