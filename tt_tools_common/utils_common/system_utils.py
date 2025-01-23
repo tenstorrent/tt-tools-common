@@ -103,13 +103,6 @@ def get_host_info() -> dict:
         "Driver": "TT-KMD " + get_driver_version(),
     }
 
-
-def get_nr_hugepages() -> str:
-    with open("/proc/sys/vm/nr_hugepages", "r") as f:
-        nr = f.read().rstrip()
-    return nr
-
-
 def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
     """
     Return host info with system compatibility notes
@@ -145,12 +138,6 @@ def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
         checklist["Memory"] = host_info["Memory"]
     else:
         checklist["Memory"] = (host_info["Memory"], "32GB+")
-
-    nr_hugepages = get_nr_hugepages()
-    if int(nr_hugepages) < 1:
-        checklist["Hugepages"] = (nr_hugepages, "See Quickstart docs")
-    else:
-        checklist["Hugepages"] = nr_hugepages
 
     if host_info["Driver"]:
         checklist["Driver"] = host_info["Driver"]
