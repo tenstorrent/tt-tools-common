@@ -5,8 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.13 - 23/1/2025
+
+- Removed nr\_hugepages count from compatibility, as hugepages allocation is tricky
+  and deserves its own widget elsewhere.
+
 ## 1.4.12 - 16/1/2025
-### Changed
 
 - Added TTHostCompatibilityMenu to replace Host Info and Compatibility boxes
 - Added a count of nr\_hugepages to the TTHostCompatibilityMenu
