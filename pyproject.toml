@@ -1,6 +1,6 @@
 [project]
 name = "tt-tools-common"
-version = "1.4.13"
+version = "1.4.14"
 description = "Common library for Tenstorrent tooling"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -29,7 +29,7 @@ dependencies = [
   'psutil==5.9.6',
   'pyyaml==6.0.1',
   'rich==13.7.0',
-  'textual==0.59.0',
+  'textual==1.0.0',
   'requests==2.32.0',
   'tqdm==4.66.3',
   'pydantic>=1.2',
