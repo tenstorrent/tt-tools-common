@@ -4,6 +4,7 @@
 """
 This file contains common utilities used by all tt-tools.
 """
+import os
 import sys
 import json
 import psutil
@@ -14,7 +15,7 @@ from typing import Union, Tuple, Dict
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
 MINIMUM_DRIVER_VERSION_LDS_RESET = 26
-
+LOG_FOLDER = os.path.expanduser("~/.config/tenstorrent")
 
 def get_size(size_bytes: int, suffix: str = "B") -> str:
     """
@@ -146,12 +147,66 @@ def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
 
     return checklist
 
+def get_sw_ver_flags():
+    """ 
+    Get the flags from the reset config file
+    """    
+    if os.path.exists(f"{LOG_FOLDER}/reset_config.json"):
+        try:
+            # Attempt to parse as a JSON file
+            with open(f"{LOG_FOLDER}/reset_config.json", "r") as json_file:
+                data = json.load(json_file)
+                disable_serial_report = data.get("disable_serial_report", False)
+                disable_sw_version_report = data.get("disable_sw_version_report", False)
+                return disable_serial_report, disable_sw_version_report
+        except json.JSONDecodeError as e:
+            return None, None
+    else:
+        return None, None
+
+def get_sw_ver_from_url(board_id: str):
+    url = "https://cereal.tenstorrent.com?SerialNumber=" + board_id
+    version = {}
+    try:
+        r = requests.get(url)
+
+        try:
+            r_text = r.json()
+        except json.JSONDecodeError:
+            print("Error decoding json")
+            version["Failed to fetch"] = "No response from server"
+        else:
+            if isinstance(r_text, dict):
+                for key, value in r_text.items():
+                    if isinstance(value, str) and isinstance(key, str):
+                        version.update({key: value})
+                version.update({"Buda": "0.9.80", "Metallium": "0.42.0"})
+                # Fix up the keys with user-facing names
+                version["TT-Metalium"] = version["Metallium"]
+                del version["Metallium"]
+                version["TT-Buda"] = version["Buda"]
+                del version["Buda"]
+            else:
+                version["Failed to fetch"] = "Unexpected response from server"
+    except requests.exceptions.HTTPError:
+        version["Failed to fetch"] = "We encountered an HTTP error."
+    except requests.exceptions.ConnectionError:
+        version["Failed to fetch"] = (
+            "There was an error connecting to the server. Please check your internet connection."
+        )
+    except requests.exceptions.Timeout:
+        version["Failed to fetch"] = (
+            "Timeout error. It seems the server is taking too long to respond."
+        )
+    except requests.exceptions.RequestException:
+        version["Failed to fetch"] = "Something unexpected happened."
+    
+    return version
 
 def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
-    # TODO: Implement call to server to pull latest SW versions
     """
-    Get software version info.
-
+    Get software version info. 
+    If reset_config is available on the system then parse the file and disable settings as specified
     Args:
         show_sw_ver (bool): Whether to show software version info. Will default to N/A if False.
     """
@@ -163,44 +218,15 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         "TT-Buda": "N/A",
         "TT-Metalium": "N/A",
     }
-    version = {}
-    for board_id in board_ids:
-        url = "https://cereal.tenstorrent.com?SerialNumber=" + board_id
-        try:
-            r = requests.get(url)
-
-            try:
-                r_text = r.json()
-            except json.JSONDecodeError:
-                print("Error decoding json")
-                version["Failed to fetch"] = "No response from server"
-            else:
-                if isinstance(r_text, dict):
-                    for key, value in r_text.items():
-                        if isinstance(value, str) and isinstance(key, str):
-                            version.update({key: value})
-                    version.update({"Buda": "0.9.80", "Metallium": "0.42.0"})
-                    # Fix up the keys with user-facing names
-                    version["TT-Metalium"] = version["Metallium"]
-                    del version["Metallium"]
-                    version["TT-Buda"] = version["Buda"]
-                    del version["Buda"]
-                else:
-                    version["Failed to fetch"] = "Unexpected response from server"
-        except requests.exceptions.HTTPError:
-            version["Failed to fetch"] = "We encountered an HTTP error."
-        except requests.exceptions.ConnectionError:
-            version["Failed to fetch"] = (
-                "There was an error connecting to the server. Please check your internet connection."
-            )
-        except requests.exceptions.Timeout:
-            version["Failed to fetch"] = (
-                "Timeout error. It seems the server is taking too long to respond."
-            )
-        except requests.exceptions.RequestException:
-            version["Failed to fetch"] = "Something unexpected happened."
-
-    if show_sw_ver:
-        return version
-
+    disable_serial_report, disable_sw_version_report = get_sw_ver_flags()
+    
+    if disable_sw_version_report or not show_sw_ver:
+        # return default
+        return sw_ver
+    if disable_serial_report:
+        sw_ver = get_sw_ver_from_url("")
+    else:
+        for board_id in board_ids:
+            # get the query for all the boards
+            sw_ver = get_sw_ver_from_url(board_id)
     return sw_ver

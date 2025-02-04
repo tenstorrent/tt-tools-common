@@ -174,6 +174,8 @@ class HostResetLog(ElasticModel):
     wh_link_reset: PciResetDeviceInfo
     re_init_devices: bool
     wh_mobo_reset: List[MoboReset]
+    disable_serial_report: bool
+    disable_sw_version_report: bool
 
     def save_as_json(self, fname: Union[str, Path]):
         with open(fname, "w") as f:
