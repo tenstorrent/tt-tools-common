@@ -1,6 +1,6 @@
 [project]
 name = "tt-tools-common"
-version = "1.4.14"
+version = "1.4.15"
 description = "Common library for Tenstorrent tooling"
 readme = "README.md"
 requires-python = ">=3.7"
