@@ -5,10 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.15 - 05/05/2025
+
+### Changed
+- parse\_reset\_json now returns a ResetInput with stricter typing
+
 ## 1.4.14 - 04/02/2025
 
 ### Added
-- New flags in reset config file generation to disable sw_version reporting
+- New flags in reset config file generation to disable sw\_version reporting
 
 ## 1.4.13 - 23/1/2025
 

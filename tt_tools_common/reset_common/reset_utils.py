@@ -10,6 +10,9 @@ import sys
 import json
 import datetime
 from pathlib import Path
+from typing import Dict, Union
+from enum import Enum
+from dataclasses import dataclass
 import tt_tools_common.reset_common.host_reset_log as log
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 from tt_tools_common.utils_common.system_utils import get_host_info
@@ -17,6 +20,71 @@ from tt_tools_common.utils_common.tools_utils import init_logging
 
 LOG_FOLDER = os.path.expanduser("~/.config/tenstorrent")
 
+class ResetType(Enum):
+    ALL = 1
+    CONFIG_JSON = 2
+    ID_LIST = 3
+
+@dataclass
+class ResetInput:
+    type: ResetType
+    value: Union[Dict, int, None]
+
+def parse_reset_input(value: list) -> ResetInput:
+    """
+    Attempt to parse a reset argument as one of three ResetTypes:
+
+    - String literal "all" or no input (ALL)
+    - JSON file (CONFIG_JSON)
+    - List of ints corresponding to PCIe indices (ID_LIST)
+        - Note it is valid for these ints to be comma or space separated
+
+    Returns a ResetInput with a type and value.
+    """
+    if value == [] or value == ["all"]:
+        return ResetInput(type = ResetType.ALL, value = None)
+
+    if len(value) == 1: # No spaces in input- could be a filename or "0,1,2"-like
+        str_input = value[0]
+        try:
+            # Attempt to parse as a JSON file
+            with open(str_input, "r") as json_file:
+                json_data: dict = json.load(json_file)
+                return ResetInput(type = ResetType.CONFIG_JSON, value = json_data)
+
+        except json.JSONDecodeError as e:
+            print(
+                CMD_LINE_COLOR.RED,
+                f"Please check the format of the json file.\n {e}",
+                CMD_LINE_COLOR.ENDC,
+            )
+
+        except FileNotFoundError:
+            # If no file found, attempt to parse the string as a list of comma separated integers
+            try:
+                list_input = [int(item) for item in str_input.split(",")]
+                list_input = list(sorted(set(list_input))) # Filter repeats
+                return ResetInput(type = ResetType.ID_LIST, value = list_input)
+            except ValueError:
+                print(
+                    CMD_LINE_COLOR.RED,
+                    "Invalid input! Provide list of comma separated numbers or a json file.\n To generate a reset json config file run tt-smi -g",
+                    CMD_LINE_COLOR.ENDC,
+                )
+                sys.exit(1)
+
+    else: # Spaces in input- should be a list of ints
+        try:
+            list_input = [int(item) for item in value]
+            list_input = list(sorted(set(list_input))) # Filter repeats
+            return ResetInput(type = ResetType.ID_LIST, value = list_input)
+        except ValueError as e:
+                print(
+                    CMD_LINE_COLOR.RED,
+                    "Invalid input! Provide list of comma separated numbers or a json file.\n To generate a reset json config file run tt-smi -g",
+                    CMD_LINE_COLOR.ENDC,
+                )
+                sys.exit(1)
 
 def generate_reset_logs(devices, result_filename: str = None):
     """
@@ -66,30 +134,3 @@ def generate_reset_logs(devices, result_filename: str = None):
             init_logging(LOG_FOLDER)
     reset_log.save_as_json(log_filename)
     return log_filename
-
-
-def parse_reset_input(value):
-    """Validate the reset inputs - either list of int PCI IDs or a json config file"""
-    try:
-        # Attempt to parse as a JSON file
-        with open(value, "r") as json_file:
-            data = json.load(json_file)
-            return data
-    except json.JSONDecodeError as e:
-        print(
-            CMD_LINE_COLOR.RED,
-            f"Please check the format of the json file.\n {e}",
-            CMD_LINE_COLOR.ENDC,
-        )
-        sys.exit(1)
-    except FileNotFoundError:
-        # If no file found, attempt to parse as a list of comma separated integers
-        try:
-            return [int(item) for item in value.split(",")]
-        except ValueError:
-            print(
-                CMD_LINE_COLOR.RED,
-                "Invalid input! Provide list of comma separated numbers or a json file.\n To generate a reset json config file run tt-smi -g",
-                CMD_LINE_COLOR.ENDC,
-            )
-            sys.exit(1)
