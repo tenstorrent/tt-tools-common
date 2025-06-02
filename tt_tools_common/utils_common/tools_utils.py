@@ -169,6 +169,25 @@ def hex_to_semver_m3_fw(hexsemver: int):
 
     return f"{major}.{minor}.{patch}.{ver}"
 
+def hex_to_semver_zephyr_fw(hexsemver: int):
+    """Converts a semantic version string from format 0x0A0F0100 to 10.15.1 or
+    0x0A0F0101 to 10.15.1-rc1"""
+    if hexsemver == 0 or hexsemver == 0xFFFFFFFF:
+        return "N/A"
+
+    major = hexsemver >> 24 & 0xFF
+    minor = hexsemver >> 16 & 0xFF
+    patch = hexsemver >> 8 & 0xFF
+    rc_num = hexsemver >> 0 & 0xFF
+
+    rc = ""
+    # rc of 0 indicates a final release and requires no suffix
+    # rc > 0 indicates a release candidate (i.e. -rc1, -rc2, etc)
+    if rc_num > 0:
+        rc = f"-rc{rc_num}"
+
+    return f"{major}.{minor}.{patch}{rc}"
+
 
 def init_logging(log_folder: str):
     """Create log folders if they don't exist"""
