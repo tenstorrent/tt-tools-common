@@ -14,7 +14,7 @@ import requests
 from typing import Union, Tuple, Dict
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 
-MINIMUM_DRIVER_VERSION_LDS_RESET = 26
+MINIMUM_DRIVER_VERSION_LDS_RESET = "1.26.0"
 LOG_FOLDER = os.path.expanduser("~/.config/tenstorrent")
 
 def get_size(size_bytes: int, suffix: str = "B") -> str:
@@ -44,37 +44,97 @@ def get_driver_version() -> Union[str, None]:
 
     return driver
 
+def _parse_version_string(version_str: str) -> Tuple[int, int, int]:
+    """
+    Parse a version string into a tuple of (major, minor, patch) integers.
+    Handles SemVer-like formats including pre-release identifiers and build metadata,
+    e.g., "1.34", "1.34.0", "1.34.1-alpha", "1.2.3+build456", "1.4.0-rc1+build42".
+
+    Pre-release identifiers (e.g., "-alpha") and build metadata (e.g., "+build456")
+    are stripped to get the core (major, minor, patch) version for comparison.
+
+    Versions with fewer than three numeric parts (e.g., "1.34") will have patch
+    (and minor if applicable for a single "1") defaulted to 0.
+    """
+    if not version_str:
+        raise ValueError("Version string cannot be empty")
+
+    # Strip build metadata (text after first '+') first.
+    core_version_str = version_str.split("+")[0]
+
+    # Then, strip pre-release identifier (text after '-').
+    main_version_part = core_version_str.split("-")[0]
+
+    parts = main_version_part.split(".")
+
+    if not parts or not parts[0]: # Check for empty string after split or no parts
+        raise ValueError(f"Invalid version format: {version_str}")
+
+    try:
+        major = int(parts[0])
+        minor = int(parts[1]) if len(parts) > 1 else 0
+        patch = int(parts[2]) if len(parts) > 2 else 0
+    except ValueError as e:
+        raise ValueError(f"Version parts must be integers: {version_str}") from e
+
+    return major, minor, patch
 
 def check_driver_version(
-    operation: str, minimum_driver_version: str = MINIMUM_DRIVER_VERSION_LDS_RESET
+    operation: str, minimum_required_version_str: str = MINIMUM_DRIVER_VERSION_LDS_RESET
 ):
     """
-    Check if driver is beyond minimum version to perform resets
-    Return non zero exit code and bail if version check fails
+    Check if the currently installed Tenstorrent driver version is sufficient
+    for the specified operation.
+
+    Compares the current driver version against the minimum required version.
+    Exits with a non-zero status code if:
+    - No driver is detected.
+    - Version strings are malformed.
+    - The current driver version is older than the minimum required version.
     """
-    driver = get_driver_version()
-    if driver is None:
+    current_driver_version_str = get_driver_version()
+
+    if current_driver_version_str is None:
         print(
-            CMD_LINE_COLOR.RED,
-            "No Tenstorrent driver detected! Please install driver using tt-kmd: https://github.com/tenstorrent/tt-kmd ",
-            CMD_LINE_COLOR.ENDC,
+            f"{CMD_LINE_COLOR.RED}"
+            "No Tenstorrent driver detected! Please install the driver using tt-kmd: "
+            "https://github.com/tenstorrent/tt-kmd"
+            f"{CMD_LINE_COLOR.ENDC}"
         )
         sys.exit(1)
-    if int(driver.split("-")[0].split(".")[1]) < minimum_driver_version:
+
+    try:
+        current_version_tuple = _parse_version_string(current_driver_version_str)
+        minimum_version_tuple = _parse_version_string(minimum_required_version_str)
+    except ValueError as e:
         print(
-            CMD_LINE_COLOR.RED,
-            f"Current driver version: {driver}",
-            CMD_LINE_COLOR.ENDC,
+            f"{CMD_LINE_COLOR.RED}"
+            f"Error parsing version strings. Current: '{current_driver_version_str}', "
+            f"Minimum Required: '{minimum_required_version_str}'. Details: {e}"
+            f"{CMD_LINE_COLOR.ENDC}"
+        )
+        sys.exit(1)
+
+    # Python's tuple comparison works lexicographically, which is suitable for version numbers.
+    # (1, 34, 0) is less than (1, 35, 0)
+    # (1, 34, 0) is not less than (1, 34, 0)
+    # (2, 0, 0) is not less than (1, 35, 0)
+    if current_version_tuple < minimum_version_tuple:
+        print(
+            f"{CMD_LINE_COLOR.RED}"
+            f"Current driver version: {current_driver_version_str}"
+            f"{CMD_LINE_COLOR.ENDC}"
         )
         print(
-            CMD_LINE_COLOR.RED,
-            f"This script requires driver version to be greater than 1.{minimum_driver_version}, not continuing with {operation}",
-            CMD_LINE_COLOR.ENDC,
+            f"{CMD_LINE_COLOR.RED}"
+            f"Operation '{operation}' requires Tenstorrent driver version "
+            f"{minimum_required_version_str} or greater. Your version is too old."
+            f"{CMD_LINE_COLOR.ENDC}"
         )
         print(
-            CMD_LINE_COLOR.RED,
-            "Please install correct driver version using tt-kmd: https://github.com/tenstorrent/tt-kmd ",
-            CMD_LINE_COLOR.ENDC,
+            f"{CMD_LINE_COLOR.RED}"
+            "Please update your driver using tt-kmd: https://github.com/tenstorrent/tt-kmd"
+            f"{CMD_LINE_COLOR.ENDC}"
         )
         sys.exit(1)
 
@@ -148,9 +208,9 @@ def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
     return checklist
 
 def get_sw_ver_flags():
-    """ 
+    """
     Get the flags from the reset config file
-    """    
+    """
     if os.path.exists(f"{LOG_FOLDER}/reset_config.json"):
         try:
             # Attempt to parse as a JSON file
@@ -200,12 +260,12 @@ def get_sw_ver_from_url(board_id: str):
         )
     except requests.exceptions.RequestException:
         version["Failed to fetch"] = "Something unexpected happened."
-    
+
     return version
 
 def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
     """
-    Get software version info. 
+    Get software version info.
     If reset_config is available on the system then parse the file and disable settings as specified
     Args:
         show_sw_ver (bool): Whether to show software version info. Will default to N/A if False.
@@ -219,7 +279,7 @@ def get_sw_ver_info(show_sw_ver: bool, board_ids: str):
         "TT-Metalium": "N/A",
     }
     disable_serial_report, disable_sw_version_report = get_sw_ver_flags()
-    
+
     if disable_sw_version_report or not show_sw_ver:
         # return default
         return sw_ver
