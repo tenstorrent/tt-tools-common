@@ -4,8 +4,6 @@ run-name: Create Release
 on:
   workflow_dispatch:
   workflow_call:
-  #push:
-  #  tags: [ 'v*' ]
 
 jobs:
   # what this should do is properly do a release of everything here
@@ -61,8 +59,9 @@ jobs:
       contents: write
     outputs:
       git_hash: ${{ steps.new-git-hash.outputs.git_hash }}
-      code_version: ${{ steps.code-ver.outputs.code_version }}
-      code_version_new: ${{ steps.new-code-version.outputs.code_version_new }}
+      package_name: ${{ steps.packagename.outputs.package_name }}
+      package_version: ${{ steps.packagever.outputs.package_version }}
+      package_version_new: ${{ steps.new-package-version.outputs.package_version_new }}
       version_major: ${{ steps.version.outputs.major }}
       version_minor: ${{ steps.version.outputs.minor }}
       version_patch: ${{ steps.version.outputs.patch }}
@@ -71,10 +70,6 @@ jobs:
       version_full: ${{ steps.version.outputs.full }}
       number_of_commits_since_tag: ${{ steps.num-commits-since-tag.outputs.num_commits_since_tag }}
     steps:
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          code-version: '3.10'
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
@@ -84,53 +79,58 @@ jobs:
         run: git config --global user.email "${EMAIL}"
       - name: Git name
         run: git config --global user.name "${NAME}"
+      - name: Install toml-cli
+        run: |
+          python3 -m venv venv
+          . ./venv/bin/activate
+          pip install --upgrade pip
+          pip install toml-cli
       - name: What version are we?
-        id: code-ver
+        id: packagever
         run: |
-          # Extract version from pyproject.toml
-          export tt_tools_ver="$(grep -E '^version\s*=' pyproject.toml | sed 's/version\s*=\s*"\([^"]*\)".*/\1/')"
-          echo "code_version=${tt_tools_ver}"
-          echo "code_version=${tt_tools_ver}" >> "$GITHUB_OUTPUT"
-      - name: Dry run version bump to get new version
-        id: dry-run-version
-        uses: anothrNick/github-tag-action@1.67.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INITIAL_VERSION: ${{ steps.code-ver.outputs.code_version }}
-          WITH_V: true
-          DEFAULT_BUMP: patch
-          RELEASE_BRANCHES: ${{ needs.create-temp-branch.outputs.temp_branch_ref }}
-          DRY_RUN: true
-          TAG_CONTEXT: repo
-          PRERELEASE: false
+          . ./venv/bin/activate
+          export package_version="$( toml get project.version --toml-path pyproject.toml )"
+          echo "package_version=${package_version}"
+          echo "package_version=${package_version}" >> "$GITHUB_OUTPUT"
+      - name: What package are we?
+        id: packagename
+        run: |
+          . ./venv/bin/activate
+          export package_name="$( toml get project.name --toml-path pyproject.toml )"
+          echo "package_name=${package_name}"
+          echo "package_name=${package_name}" >> "$GITHUB_OUTPUT"
+      - name: Bump the version
+        run: |
+          . ./venv/bin/activate
+          pip install bump2version
+          bump2version --current-version ${{ steps.packagever.outputs.package_version }} patch pyproject.toml
       - name: What NEW Version?
-        id: new-code-version
+        id: new-package-version
         run: |
-          export code_version_new="${{ steps.dry-run-version.outputs.new_tag }}"
-          echo "code_version_new=${code_version_new}"
-          echo "code_version_new=${code_version_new}" >> "$GITHUB_OUTPUT"
+          python3 -m venv venv
+          . ./venv/bin/activate
+          pip install --upgrade pip
+          pip install toml-cli
+          export package_version_new="$( toml get project.version --toml-path pyproject.toml )"
+          echo "package_version_new=${package_version_new}"
+          echo "package_version_new=${package_version_new}" >> "$GITHUB_OUTPUT"
       - name: Parse version from string
         id: version
         uses: release-kit/semver@v2
         with:
-          string: ${{ steps.new-code-version.outputs.code_version_new }}
+          string: ${{ steps.new-package-version.outputs.package_version_new }}
       - name: Find number of commits since last tag
         id: num-commits-since-tag
         run: |
           export num_commits_since="num_commits_since_tag=$( git rev-list $(git describe --tags --abbrev=0)..HEAD --count )"
-          echo "${num_commits_since}"
-          echo "${num_commits_since}" >> "$GITHUB_OUTPUT"
-      - run: echo ${{ steps.code-ver.outputs.code_version }}
-      - name: Update version in project files
+          echo "num_commits_since_tag=${num_commits_since}"
+          echo "num_commits_since_tag=${num_commits_since}" >> "$GITHUB_OUTPUT"
+      - run: echo ${{ steps.packagever.outputs.package_version }}
+      - name: Update Version - git push
         run: |
-          # Update version in pyproject.toml (strip the 'v' prefix for the file)
-          version_without_v="${{ steps.new-code-version.outputs.code_version_new }}"${{ needs.create-temp-branch.outputs.new-branch-ref }}
-          version_without_v="${version_without_v#v}"
-          sed -i "s/^version\s*=\s*['\"][^'\"]*['\"]/version = \"${version_without_v}\"/" pyproject.toml
-
-          # Commit the version update
-          git add pyproject.toml
-          git commit -m "Version bump to ${{ steps.new-code-version.outputs.code_version_new }}"
+          git commit \
+            pyproject.toml \
+            -m "pyproject.toml- updating version to ${{ steps.new-package-version.outputs.package_version_new }}"
           git push
       - name: Find New Git Hash
         id: new-git-hash
@@ -240,6 +240,7 @@ jobs:
   # Tag the Release
   ###
   tagrelease:
+    name: Tag the Release
     needs:
       - versionchange
       - changelogs
@@ -260,9 +261,9 @@ jobs:
           fetch-depth: 0
       - run: git log --format="%H" -n 1
       - run: |
-          echo ${{ needs.versionchange.outputs.code_version_new }}
+          echo ${{ needs.versionchange.outputs.package_version_new }}
           echo ${{ needs.versionchange.outputs.git_hash }}
-          git tag ${{ needs.versionchange.outputs.code_version_new }}
+          git tag v${{ needs.versionchange.outputs.package_version_new }}
           git tag
           git push --tags
 
@@ -274,18 +275,17 @@ jobs:
     needs:
       - create-temp-branch
       - versionchange
+      - changelogs
       - build_all_depends
       - tagrelease
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-          fetch-depth: 0
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
 
       - name: Build Changelog
         id: build_changelog
@@ -305,20 +305,20 @@ jobs:
               "commit_template": "- #{{TITLE}} (#{{MERGE_SHA}}) by @#{{AUTHOR}}"
             }
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts/
-          merge-multiple: true
+      - name: Find the deb & whl files
+        run: find ${GITHUB_WORKSPACE} -type f -iname \*.deb -o -iname \*.whl -exec ls -lah {} \;
 
       - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          gh release create '${{ needs.versionchange.outputs.code_version_new }}' \
-            --repo '${{ github.repository }}' \
-            --notes "${{ steps.build_changelog.outputs.changelog }}" \
-            release-artifacts/*
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.versionchange.outputs.package_version_new }}
+          files: |
+            ${{ github.workspace }}/[!artifacts-]*/*.deb
+            ${{ github.workspace }}/*/*.whl
+          body: ${{ steps.build_changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
 
   ###
   # Merge back
@@ -356,9 +356,6 @@ jobs:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
       - build_all_depends
-      - generate-release
-    runs-on: ubuntu-latest
-
     environment:
       name: testpypi
       url: https://test.pypi.org/p/tt-tools-common
@@ -373,6 +370,7 @@ jobs:
           name: release-dists
           path: dist/
       - name: Publish distribution 📦 to TestPyPI
+        #run: echo "Hi!"
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
@@ -401,8 +399,10 @@ jobs:
     - name: Download Python distributions
       uses: actions/download-artifact@v4
       with:
-        name: release-dists
         path: dist/
-
     - name: Publish distribution 📦 to PyPI
+      #run: echo "Hi!"
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        verbose: true
+

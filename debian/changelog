@@ -30,3 +30,10 @@ tt-tools-common (1.4.17-1) unstable; urgency=medium
   * Version 1.4.17 release
 
  -- June Knauth <jknauth@tenstorrent.com>  Thu, 31 Jul 2025 12:00:00 +0000
+
+tt-tools-common (1.4.16-1) stable; urgency=medium
+
+  [ John 'Warthog9' Hawley ]
+  * Start of Packaging changelog
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Tue, 15 Jul 2025 23:20:43 +0000
