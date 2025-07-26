@@ -11,8 +11,10 @@ import psutil
 import distro
 import platform
 import requests
+import subprocess
 from typing import Union, Tuple, Dict
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
+
 
 MINIMUM_DRIVER_VERSION_LDS_RESET = "1.26.0"
 LOG_FOLDER = os.path.expanduser("~/.config/tenstorrent")
@@ -36,11 +38,17 @@ def get_driver_version() -> Union[str, None]:
     """
     Get the version of the Tenstorrent driver
     """
-    try:
-        with open("/sys/module/tenstorrent/version", "r", encoding="utf-8") as f:
-            driver = f.readline().rstrip()
-    except Exception:
-        driver = None
+    if distro.id == "alpine":
+        try:
+            driver = subprocess.run(["akms", "status", "tenstorrent"], capture_output=True).stdout.decode().split('\t')[2]
+        except Exception:
+            driver = None
+    else:
+        try:
+            with open("/sys/module/tenstorrent/version", "r", encoding="utf-8") as f:
+                driver = f.readline().rstrip()
+        except Exception:
+            driver = None
 
     return driver
 
