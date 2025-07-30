@@ -38,7 +38,7 @@ def get_driver_version() -> Union[str, None]:
     """
     Get the version of the Tenstorrent driver
     """
-    if distro.id == "alpine":
+    if distro.id() == "alpine":
         try:
             driver = subprocess.run(["akms", "status", "tenstorrent"], capture_output=True).stdout.decode().split('\t')[2]
         except Exception:
