@@ -13,6 +13,7 @@ jobs:
   build-ubuntu:
     name: Build Ubuntu ${{ matrix.ubuntu-version }} Package
     runs-on: ubuntu-${{ matrix.ubuntu-version }}.04
+    fail-fast: false
     strategy:
       matrix:
         ubuntu-version: [22, 24]
