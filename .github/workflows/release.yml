@@ -40,8 +40,8 @@ jobs:
       contents: write
     outputs:
       git_hash: ${{ steps.new-git-hash.outputs.git_hash }}
-      tt_smi_version: ${{ steps.python-ver.outputs.python_version }}
-      tt_smi_version_new: ${{ steps.new-python-version.outputs.python_version_new }}
+      tt_tools_version: ${{ steps.python-ver.outputs.python_version }}
+      tt_tools_version_new: ${{ steps.new-python-version.outputs.python_version_new }}
       version_major: ${{ steps.version.outputs.major }}
       version_minor: ${{ steps.version.outputs.minor }}
       version_patch: ${{ steps.version.outputs.patch }}
@@ -67,9 +67,9 @@ jobs:
         id: python-ver
         run: |
           # Extract version from pyproject.toml
-          export tt_smi_ver="$(grep -E '^version\s*=' pyproject.toml | sed 's/version\s*=\s*"\([^"]*\)".*/\1/')"
-          echo "python_version=${tt_smi_ver}"
-          echo "python_version=${tt_smi_ver}" >> "$GITHUB_OUTPUT"
+          export tt_tools_ver="$(grep -E '^version\s*=' pyproject.toml | sed 's/version\s*=\s*"\([^"]*\)".*/\1/')"
+          echo "python_version=${tt_tools_ver}"
+          echo "python_version=${tt_tools_ver}" >> "$GITHUB_OUTPUT"
       - name: Dry run version bump to get new version
         id: dry-run-version
         uses: anothrNick/github-tag-action@1.67.0
@@ -257,9 +257,9 @@ jobs:
           fetch-depth: 0
       - run: git log --format="%H" -n 1
       - run: |
-          echo ${{ needs.versionchange.outputs.tt_smi_version_new }}
+          echo ${{ needs.versionchange.outputs.tt_tools_version_new }}
           echo ${{ needs.versionchange.outputs.git_hash }}
-          git tag ${{ needs.versionchange.outputs.tt_smi_version_new }}
+          git tag ${{ needs.versionchange.outputs.tt_tools_version_new }}
           git tag
           git push --tags
 
@@ -306,7 +306,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
-        gh release create '${{ needs.versionchange.outputs.tt_smi_version_new }}' \
+        gh release create '${{ needs.versionchange.outputs.tt_tools_version_new }}' \
           --repo '${{ github.repository }}' \
           --notes "${{ steps.build_changelog.outputs.changelog }}" \
           release-artifacts/*
@@ -348,7 +348,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/tt-smi
+      url: https://pypi.org/p/tt-tools-common
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
@@ -364,13 +364,11 @@ jobs:
 
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
-    # Disable for now
-    if: false
     needs: [create-release]
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/tt-smi
+      url: https://test.pypi.org/p/tt-tools-common
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
