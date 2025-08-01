@@ -33,6 +33,7 @@ dependencies = [
   'requests>=2.32.3',
   'tqdm>=4.66.3',
   'pydantic>=1.2',
+  'setuptools',
 ]
 
 optional-dependencies.dev = [

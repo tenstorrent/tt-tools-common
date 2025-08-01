@@ -29,7 +29,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y git build-essential debhelper dh-python python3-setuptools python3-wheel python3-pip pybuild-plugin-pyproject python3-all libpython3-all-dev python3-venv
-        python -m pip install build
+        python -m pip install -U build setuptools==70
 
     - name: Build Python wheel
       run: |
