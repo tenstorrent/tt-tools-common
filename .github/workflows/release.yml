@@ -164,9 +164,7 @@ jobs:
       - run: git tag
       # Ok this needs to get up leveled somewhere so that it can be shared across Debian and Ubuntu obviously
       - run: ls -lah
-      - name: Link the Ubuntu build stuff in as 'debian/'
-        run: ln -s debian.ubuntu debian
-      - name: Generate Ubuntu Changelog
+      - name: Generate Ubuntu / Debian Changelog
         run: |
           echo "Major: ${MAJOR}"
           echo "Minor: ${MINOR}"
@@ -176,18 +174,6 @@ jobs:
             --debian-branch ${{ needs.create-temp-branch.outputs.temp_branch_ref }} \
             -R \
             -N ${MAJOR}.${MINOR}.${PATCH} \
-            --spawn-editor=never
-        env:
-          EMAIL: releases@tenstorrent.com
-          NAME: Tenstorrent Releases
-      - name: Link the Debian build stuff in as 'debian/'
-        run:  ln -s debian.debian debian
-      - name: Generate Debian Changelog
-        run: |
-          gbp dch \
-            --debian-branch ${{ needs.create-temp-branch.outputs.temp_branch_ref }} \
-            -R \
-            N ${MAJOR}.${MINOR}.${PATCH} \
             --spawn-editor=never
         env:
           EMAIL: releases@tenstorrent.com
