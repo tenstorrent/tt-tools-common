@@ -28,7 +28,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ubuntu-version: [22, 24, latest]
+        ubuntu-version: 
+          - 22
+          - 24
     steps:
       - run: sudo apt update
       - name: Install build dependencies
