@@ -1,3 +1,14 @@
+tt-tools-common (1.4.19) noble; urgency=medium
+
+  [ John 'Warthog9' Hawley ]
+  * Full PyPi release enablement
+  * Fix: Cleaning up release changelog generation
+
+  [ Tenstorrent Releases ]
+  * Version bump to v1.4.19
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Mon, 04 Aug 2025 18:01:42 +0000
+
 tt-tools-common (1.4.18) noble; urgency=medium
 
   [ June Knauth (tt) ]
