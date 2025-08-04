@@ -8,6 +8,18 @@ on:
         description: 'Git ref to build from'
         required: true
         type: string
+      MAJOR:
+        required: false
+        type: string
+      MINOR:
+        required: false
+        type: string
+      PATCH:
+        required: false
+        type: string
+      NUMBER_OF_COMMITS_SINCE_TAG:
+        required: false
+        type: string
 
 jobs:
   build-ubuntu:
@@ -16,44 +28,120 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ubuntu-version: [22, 24]
+        ubuntu-version: [22, 24, latest]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.ref }}
-        fetch-tags: true
-        fetch-depth: 0
-
-    - name: Install build dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git build-essential debhelper dh-python python3-setuptools python3-wheel python3-pip pybuild-plugin-pyproject python3-all libpython3-all-dev python3-venv
-        python -m pip install -U build setuptools==70
-
-    - name: Build Python wheel
-      run: |
-        python -m build --wheel
-
-    - name: Build Debian package
-      run: |
-        dpkg-buildpackage -us -uc -b
-        # Move non-deb relevant files
-        mv ../*.changes ~
-        mv ../*.buildinfo ~
-        # Move and rename deb file to include Ubuntu version
-        for file in ../*.deb; do
-          if [ -f "$file" ]; then
-            base=$(basename "$file" .deb)
-            mv "$file" "${HOME}/${base}-ubuntu${{ matrix.ubuntu-version }}.deb"
+      - run: sudo apt update
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            debhelper \
+            dh-python \
+            dh-sequence-python3 \
+            git \
+            git-buildpackage \
+            gnupg \
+            libpython3-all-dev \
+            pybuild-plugin-pyproject \
+            python3-all \
+            python3-build \
+            python3-pip \
+            python3-setuptools \
+            python3-venv \
+            python3-wheel
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.PKG_SIGNING_KEY_DEB }}
+      - run: gpg --list-keys
+      - run: gpg --list-secret-keys
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-tags: true
+          fetch-depth: 0
+      - name: Extract version from tag
+        uses: damienaicheh/extract-version-from-tag-action@v1.3.0
+      - run: git tag
+      - name: Ok Figure out version
+        run: |
+          if [[ -n "${{ inputs.MAJOR }}" ]]
+          then
+            echo "MAJOR=${{ inputs.MAJOR }}" >> $GITHUB_ENV
+            echo "MAJOR=${{ inputs.MAJOR }}"
           fi
-        done
 
-    - name: Upload Debian package
-      uses: actions/upload-artifact@v4
-      with:
-        name: ubuntu-${{ matrix.ubuntu-version }}-package
-        path: |
-          ~/*-ubuntu${{ matrix.ubuntu-version }}.deb
-          ~/*.changes
-          ~/*.buildinfo
+          if [[ -n "${{ inputs.MINOR }}" ]]
+          then
+            echo "MINOR=${{ inputs.MINOR }}" >> $GITHUB_ENV
+            echo "MINOR=${{ inputs.MINOR }}"
+          fi
+
+          if [[ -n "${{ inputs.PATCH }}" ]]
+          then
+            echo "PATCH=${{ inputs.PATCH }}" >> $GITHUB_ENV
+            echo "PATCH=${{ inputs.PATCH }}"
+          fi
+
+          if [[ -n "${{ inputs.MAJOR }}" ]]
+          then
+            echo "NUMBER_OF_COMMITS_SINCE_TAG=${{ inputs.NUMBER_OF_COMMITS_SINCE_TAG }}" >> $GITHUB_ENV
+            echo "NUMBER_OF_COMMITS_SINCE_TAG=${{ inputs.NUMBER_OF_COMMITS_SINCE_TAG }}"
+          fi
+      - run: |
+          gbp dch \
+            --debian-branch ${{ inputs.ref }} \
+            -R \
+            -N ${MAJOR}.${MINOR}.${PATCH} \
+            --spawn-editor=never
+            #--commit \
+            #--commit-msg="Generating Debian Changelog for ${MAJOR}.${MINOR}.${PATCH}-${NUMBER_OF_COMMITS_SINCE_TAG}"
+        env:
+          EMAIL: releases@tenstorrent.com
+          NAME: Tenstorrent Releases
+      - run: |
+          gbp buildpackage \
+            --git-ignore-new
+            #--git-upstream-tag='v%(version)s'
+            # --git-tag
+        continue-on-error: true
+
+      - name: Move Debian packages
+        run: mkdir -p artifacts && mv ../*.deb artifacts/
+      - name: Copy Changelog to artifacts
+        run: cp debian/changelog artifacts/changelog
+      - name: Set environment variable for distro 
+        id: distro_ident
+        run: |
+          source /etc/os-release && \
+          echo "DISTRO_IDENT=$( echo \"${NAME}\" | sed 's/"//g' | tr '[:upper:]' '[:lower:]' )-${VERSION_ID}" \
+                >> $GITHUB_ENV
+      - name: Set environment variable for deb filename
+        id: deb_filename
+        run: echo "DEB_FILENAME=$(basename artifacts/*.deb)" >> $GITHUB_ENV
+      - name: Set environment variable for deb filename
+        id: deb_filename_distro
+        run: echo DEB_FILENAME_DISTRO=$(basename artifacts/*.deb | sed "s/_all/_all-${DISTRO_IDENT}/" ) >> $GITHUB_ENV
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DEB_FILENAME_DISTRO }}
+          path: artifacts/${{ env.DEB_FILENAME }}
+      - name: Upload Vendor
+        uses: actions/upload-artifact@v4
+        with:
+          name: vendor-${{ env.DISTRO_IDENT }}.tar.gz
+          path: artifacts/vendor.tar.gz
+      - name: Upload Changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-changelog-${{ env.DISTRO_IDENT }}
+          path: debian/changelog
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ env.DISTRO_IDENT }}.zip
+          path: artifacts/
+
