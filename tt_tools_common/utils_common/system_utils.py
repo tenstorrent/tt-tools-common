@@ -153,6 +153,12 @@ def get_host_info() -> dict:
     kernel: str = uname.release
     hostname: str = uname.node
 
+    driver_version = get_driver_version()
+    if driver_version == None:
+        driver = None
+    else:
+        driver = "TT-KMD " + driver_version,
+
     return {
         "OS": os,
         "Distro": distro_name,
@@ -161,7 +167,7 @@ def get_host_info() -> dict:
         "Platform": uname.machine,
         "Python": platform.python_version(),
         "Memory": get_size(svmem.total),
-        "Driver": "TT-KMD " + get_driver_version(),
+        "Driver": driver,
     }
 
 def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
@@ -188,8 +194,14 @@ def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
             checklist["Distro"] = host_info["Distro"]
         else:
             checklist["Distro"] = (host_info["Distro"], "20.04 or 22.04")
+    elif distro.id() == "nixos":
+        distro_version = float(".".join(distro.version_parts()[:2]))
+        if distro_version >= 25.05:
+            checklist["Distro"] = host_info["Distro"]
+        else:
+            checklist["Distro"] = (host_info["Distro"], "25.05 or 25.11")
     else:
-        checklist["Distro"] = (host_info["Distro"], "Ubuntu 20.04 or 22.04")
+        checklist["Distro"] = (host_info["Distro"], "Ubuntu 20.04 or 22.04, NixOS 25.05 or 25.11")
 
     checklist["Kernel"] = host_info["Kernel"]
     checklist["Hostname"] = host_info["Hostname"]
