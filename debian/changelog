@@ -1,3 +1,14 @@
+tt-tools-common (1.4.25) noble; urgency=medium
+
+  [ John 'Warthog9' Hawley ]
+  * Pull in the debs finally please!
+  * Adjust deb file naming
+
+  [ Tenstorrent Releases ]
+  * pyproject.toml- updating version to 1.4.25
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Tue, 05 Aug 2025 17:51:40 +0000
+
 tt-tools-common (1.4.24) noble; urgency=medium
 
   [ John 'Warthog9' Hawley ]
