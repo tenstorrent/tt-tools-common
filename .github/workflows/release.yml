@@ -319,8 +319,7 @@ jobs:
         with:
           tag_name: v${{ needs.versionchange.outputs.package_version_new }}
           files: |
-            ${{ env.project_name }}*.deb
-            ${{ github.workspace }}/*.deb
+            ${{ github.workspace }}/${{ env.project_name }}*/*.deb
             ${{ github.workspace }}/[!artifacts-]*/*.deb
             ${{ github.workspace }}/*/*.whl
           body: ${{ steps.build_changelog.outputs.changelog }}
