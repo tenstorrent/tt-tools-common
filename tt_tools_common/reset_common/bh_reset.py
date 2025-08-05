@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This file contains functions used to do a PCIe level reset for Wormhole chip.
+This file contains functions used to do a PCIe level reset for Blackhole chip.
 """
 
 import os
@@ -21,9 +21,9 @@ from tt_tools_common.utils_common.system_utils import (
 
 
 class BHChipReset:
-    """Class to perform a chip level reset on WH PCIe boards"""
+    """Class to perform a chip level reset on BH PCIe boards"""
 
-    # WH magic numbers for reset
+    # BH magic numbers for reset
     TENSTORRENT_IOCTL_MAGIC = 0xFA
     TENSTORRENT_IOCTL_RESET_DEVICE = (TENSTORRENT_IOCTL_MAGIC << 8) | 6
     TENSTORRENT_RESET_DEVICE_RESTORE_STATE = 0
