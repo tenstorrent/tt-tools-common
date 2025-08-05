@@ -313,6 +313,24 @@ jobs:
           find ${GITHUB_WORKSPACE} -type f -iname \*.deb -o -iname \*.whl -exec ls -lah {} \;
           find /home/runner/work/${{ env.project_name }}/${{ env.project_name }}/ -exec ls -lah {} \;
 
+      - name: Deb file renames so they don't overlap
+        run: |
+          for x in $( \
+            find ${GITHUB_WORKSPACE} -type f -iname \*.deb | \
+            grep -v "artifacts-ubuntu" \
+          )
+          do
+            want="$( \
+              echo "${x}" | \
+              xargs dirname | \
+              tr "/" "\n" | \
+              tail -n 1 \
+              )"
+            mv -v \
+              "${x}" \
+              "$( echo "${x}" | xargs dirname )/${want}"
+          done
+
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
