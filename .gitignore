@@ -7,3 +7,11 @@ __pycache__/
 .vscode/
 build/
 .venv/
+venv/
+.pybuild/
+debian/.debhelper
+debian/debhelper-build-stamp
+debian/files
+debian/tt-tools-common.substvars
+debian/tt-tools-common/
+

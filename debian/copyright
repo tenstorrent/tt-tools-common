@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: tt-tools-common
-Source: https://github.com/tenstorrent/tt-smi
+Source: https://github.com/tenstorrent/tt-tools-common
 
 Files: *
 Copyright: 2025 Tenstorrent Inc.
