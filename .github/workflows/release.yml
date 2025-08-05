@@ -356,7 +356,10 @@ jobs:
   # Publish TEST PyPi
   ###
   publish-to-testpypi:
-    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    name: >-
+      Publish Python 🐍 distribution 📦 to TestPyPI
+    # Disable for now
+    #if: false
     needs:
       - build_all_depends
       - generate-release
@@ -398,6 +401,7 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/${{ env.project_name }}
+
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
@@ -406,6 +410,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: ${{ env.project_name }}*.whl
+          name: release-dists
           path: dist/
       - name: Publish distribution 📦 to PyPI
         #run: echo "Hi!"
