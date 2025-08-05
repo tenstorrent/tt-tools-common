@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+env:
+  project_name: tt-tools-common
+
 jobs:
   # what this should do is properly do a release of everything here
   # that has a new version in it.  We aren't there yet.  So in the
@@ -356,10 +359,11 @@ jobs:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
       - build_all_depends
+      - generate-release
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/tt-tools-common
+      url: https://test.pypi.org/p/${{ env.project_name }}
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -368,6 +372,7 @@ jobs:
       - name: Download Python distributions
         uses: actions/download-artifact@v4
         with:
+          pattern: ${{ env.project_name }}*.whl
           name: release-dists
           path: dist/
       - name: Publish distribution 📦 to TestPyPI
@@ -392,18 +397,19 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/tt-tools-common
+      url: https://pypi.org/p/${{ env.project_name }}
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
-    - name: Download Python distributions
-      uses: actions/download-artifact@v4
-      with:
-        path: dist/
-    - name: Publish distribution 📦 to PyPI
-      #run: echo "Hi!"
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        verbose: true
+      - name: Download Python distributions
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ env.project_name }}*.whl
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        #run: echo "Hi!"
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
 
