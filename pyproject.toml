@@ -1,9 +1,9 @@
 [project]
 name = "tt-tools-common"
+requires-python = ">=3.10"
 version = "1.4.19"
 description = "Common library for Tenstorrent tooling"
 readme = "README.md"
-requires-python = ">=3.7"
 license = {file = "LICENSE"}
 authors = [
   { name = "Sam Bansal", email = "sbansal@tenstorrent.com" }
@@ -33,7 +33,6 @@ dependencies = [
   'requests>=2.32.3',
   'tqdm>=4.66.3',
   'pydantic>=1.2',
-  'setuptools',
 ]
 
 optional-dependencies.dev = [

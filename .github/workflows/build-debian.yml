@@ -6,6 +6,7 @@ on:
     inputs:
       ref:
         description: 'Git ref to build from'
+        default: ${{ github.ref }}
         required: true
         type: string
       MAJOR:
@@ -22,15 +23,16 @@ on:
         type: string
 
 jobs:
-  build-ubuntu:
-    name: Build Ubuntu ${{ matrix.ubuntu-version }} Package
-    runs-on: ubuntu-${{ matrix.ubuntu-version }}.04
+  build-deb:
+    name: Build ${{ matrix.os }} Package
     strategy:
       fail-fast: false
       matrix:
-        ubuntu-version:
-          - 22
-          - 24
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - run: |
           echo "What started this ref: ${{ github.ref }}"
@@ -55,17 +57,12 @@ jobs:
             debhelper \
             dh-python \
             dh-sequence-python3 \
-            git \
             git-buildpackage \
             gnupg \
             libpython3-all-dev \
             pybuild-plugin-pyproject \
             python3-all \
-            python3-build \
-            python3-pip \
-            python3-setuptools \
-            python3-venv \
-            python3-wheel
+            python3-pip
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
@@ -106,22 +103,29 @@ jobs:
             echo "NUMBER_OF_COMMITS_SINCE_TAG=${{ inputs.NUMBER_OF_COMMITS_SINCE_TAG }}" >> $GITHUB_ENV
             echo "NUMBER_OF_COMMITS_SINCE_TAG=${{ inputs.NUMBER_OF_COMMITS_SINCE_TAG }}"
           fi
+
+          if [[ -n "${{ inputs.ref }}" ]]
+          then
+            echo "REF=${{ inputs.ref }}" >> $GITHUB_ENV
+            echo "REF=${{ inputs.ref }}"
+          else
+            echo "REF=${{ github.ref_name }}" >> $GITHUB_ENV
+            echo "REF=${{ github.ref_name }}"
+          fi
+      # Ok this needs to get up leveled somewhere so that it can be shared across Debian and Ubuntu obviously
+      - run: ls -lah
       - run: |
           gbp dch \
             --debian-branch ${ref_name} \
             -R \
             -N ${MAJOR}.${MINOR}.${PATCH} \
             --spawn-editor=never
-            #--commit \
-            #--commit-msg="Generating Debian Changelog for ${MAJOR}.${MINOR}.${PATCH}-${NUMBER_OF_COMMITS_SINCE_TAG}"
         env:
           EMAIL: releases@tenstorrent.com
           NAME: Tenstorrent Releases
       - run: |
           gbp buildpackage \
             --git-ignore-new
-            #--git-upstream-tag='v%(version)s'
-            # --git-tag
         continue-on-error: true
 
       - name: Move Debian packages
@@ -132,24 +136,20 @@ jobs:
         id: distro_ident
         run: |
           source /etc/os-release && \
-          echo "DISTRO_IDENT=$( echo \"${NAME}\" | sed 's/"//g' | tr '[:upper:]' '[:lower:]' )-${VERSION_ID}" \
-                >> $GITHUB_ENV
+          #echo "DISTRO_IDENT=$( echo \"${NAME}\" | sed 's/"//g' | tr '[:upper:]' '[:lower:]' )-${VERSION_ID}" \
+          #      >> $GITHUB_ENV
+          echo "DISTRO_IDENT=${{ matrix.os }}" >> $GITHUB_ENV
       - name: Set environment variable for deb filename
         id: deb_filename
         run: echo "DEB_FILENAME=$(basename artifacts/*.deb)" >> $GITHUB_ENV
       - name: Set environment variable for deb filename
         id: deb_filename_distro
-        run: echo DEB_FILENAME_DISTRO=$(basename artifacts/*.deb | sed "s/_all/_all-${DISTRO_IDENT}/" ) >> $GITHUB_ENV
+        run: echo DEB_FILENAME_DISTRO=$(basename artifacts/*.deb | sed "s/_all/_all-${{ env.DISTRO_IDENT }}/" ) >> $GITHUB_ENV
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.DEB_FILENAME_DISTRO }}
           path: artifacts/${{ env.DEB_FILENAME }}
-      - name: Upload Vendor
-        uses: actions/upload-artifact@v4
-        with:
-          name: vendor-${{ env.DISTRO_IDENT }}.tar.gz
-          path: artifacts/vendor.tar.gz
       - name: Upload Changelog
         uses: actions/upload-artifact@v4
         with:
