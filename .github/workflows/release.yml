@@ -311,7 +311,7 @@ jobs:
       - name: Find the deb & whl files
         run: |
           find ${GITHUB_WORKSPACE} -type f -iname \*.deb -o -iname \*.whl -exec ls -lah {} \;
-          find -type f -iname \*.deb -o -iname \*.whl -exec ls -lah {} \;
+          find /home/runner/work/${{ env.project_name }}/${{ env.project_name }}/ -exec ls -lah {} \;
 
       - name: Create GitHub Release
         id: create_release
@@ -320,6 +320,7 @@ jobs:
           tag_name: v${{ needs.versionchange.outputs.package_version_new }}
           files: |
             ${{ env.project_name }}*.deb
+            ${{ github.workspace }}/*.deb
             ${{ github.workspace }}/[!artifacts-]*/*.deb
             ${{ github.workspace }}/*/*.whl
           body: ${{ steps.build_changelog.outputs.changelog }}
