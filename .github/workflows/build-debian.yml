@@ -130,6 +130,7 @@ jobs:
           DEBSIGN_KEYID: ${{ steps.gpg_key_import.outputs.fingerprint }}
       - run: |
           gbp buildpackage \
+            --git-keyid=${DEBSIGN_KEYID} \
             --git-ignore-new
         #continue-on-error: true
         env:
