@@ -125,6 +125,10 @@ jobs:
           EMAIL: releases@tenstorrent.com
           NAME: Tenstorrent Releases
       - run: |
+          echo DEBSIGN_KEYID: ${DEBSIGN_KEYID}
+        env:
+          DEBSIGN_KEYID: ${{ steps.gpg_key_import.outputs.fingerprint }}
+      - run: |
           gbp buildpackage \
             --git-ignore-new
         #continue-on-error: true
