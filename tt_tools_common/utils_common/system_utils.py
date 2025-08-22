@@ -79,12 +79,29 @@ def _parse_version_string(version_str: str) -> Tuple[int, int, int]:
 
     return major, minor, patch
 
+def is_driver_version_at_least(current_version: str, minimum_version: str) -> bool:
+    """
+    Check if the current driver version meets or exceeds the minimum required version.
+    """
+    if current_version is None:
+        raise ValueError("No Tenstorrent driver detected! Please install the driver using tt-kmd: " +
+            "https://github.com/tenstorrent/tt-kmd")
+    
+    current_tuple = _parse_version_string(current_version)
+    minimum_tuple = _parse_version_string(minimum_version)
+
+    # Python's tuple comparison works lexicographically, which is suitable for version numbers.
+    # (1, 34, 0) is less than (1, 35, 0)
+    # (1, 34, 0) is not less than (1, 34, 0)
+    # (2, 0, 0) is greater than (1, 35, 0)
+    return current_tuple >= minimum_tuple
+
 def check_driver_version(
     operation: str, minimum_required_version_str: str = MINIMUM_DRIVER_VERSION_LDS_RESET
 ):
     """
     Check if the currently installed Tenstorrent driver version is sufficient
-    for the specified operation.
+    for the specified operation and exit if not.
 
     Compares the current driver version against the minimum required version.
     Exits with a non-zero status code if:
@@ -94,49 +111,35 @@ def check_driver_version(
     """
     current_driver_version_str = get_driver_version()
 
-    if current_driver_version_str is None:
-        print(
-            f"{CMD_LINE_COLOR.RED}"
-            "No Tenstorrent driver detected! Please install the driver using tt-kmd: "
-            "https://github.com/tenstorrent/tt-kmd"
-            f"{CMD_LINE_COLOR.ENDC}"
-        )
-        sys.exit(1)
-
     try:
-        current_version_tuple = _parse_version_string(current_driver_version_str)
-        minimum_version_tuple = _parse_version_string(minimum_required_version_str)
+        if is_driver_version_at_least(current_driver_version_str, minimum_required_version_str):
+            return  # Version is sufficient, continue normally
     except ValueError as e:
         print(
             f"{CMD_LINE_COLOR.RED}"
-            f"Error parsing version strings. Current: '{current_driver_version_str}', "
-            f"Minimum Required: '{minimum_required_version_str}'. Details: {e}"
+            f"Error parsing driver version. {e}"
             f"{CMD_LINE_COLOR.ENDC}"
         )
         sys.exit(1)
 
-    # Python's tuple comparison works lexicographically, which is suitable for version numbers.
-    # (1, 34, 0) is less than (1, 35, 0)
-    # (1, 34, 0) is not less than (1, 34, 0)
-    # (2, 0, 0) is not less than (1, 35, 0)
-    if current_version_tuple < minimum_version_tuple:
-        print(
-            f"{CMD_LINE_COLOR.RED}"
-            f"Current driver version: {current_driver_version_str}"
-            f"{CMD_LINE_COLOR.ENDC}"
-        )
-        print(
-            f"{CMD_LINE_COLOR.RED}"
-            f"Operation '{operation}' requires Tenstorrent driver version "
-            f"{minimum_required_version_str} or greater. Your version is too old."
-            f"{CMD_LINE_COLOR.ENDC}"
-        )
-        print(
-            f"{CMD_LINE_COLOR.RED}"
-            "Please update your driver using tt-kmd: https://github.com/tenstorrent/tt-kmd"
-            f"{CMD_LINE_COLOR.ENDC}"
-        )
-        sys.exit(1)
+    # If we reach here, the version is insufficient
+    print(
+        f"{CMD_LINE_COLOR.RED}"
+        f"Current driver version: {current_driver_version_str}"
+        f"{CMD_LINE_COLOR.ENDC}"
+    )
+    print(
+        f"{CMD_LINE_COLOR.RED}"
+        f"Operation '{operation}' requires Tenstorrent driver version "
+        f"{minimum_required_version_str} or greater. Your version is too old."
+        f"{CMD_LINE_COLOR.ENDC}"
+    )
+    print(
+        f"{CMD_LINE_COLOR.RED}"
+        "Please update your driver using tt-kmd: https://github.com/tenstorrent/tt-kmd"
+        f"{CMD_LINE_COLOR.ENDC}"
+    )
+    sys.exit(1)
 
 
 def get_host_info() -> dict:
