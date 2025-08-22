@@ -184,12 +184,12 @@ def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
 
     if distro.id() == "ubuntu":
         distro_version = float(".".join(distro.version_parts()[:2]))
-        if distro_version >= 20.04:
+        if distro_version >= 22:
             checklist["Distro"] = host_info["Distro"]
         else:
-            checklist["Distro"] = (host_info["Distro"], "20.04 or 22.04")
+            checklist["Distro"] = (host_info["Distro"], "22.04 or 24.04")
     else:
-        checklist["Distro"] = (host_info["Distro"], "Ubuntu 20.04 or 22.04")
+        checklist["Distro"] = (host_info["Distro"], "Ubuntu 22.04 or 24.04")
 
     checklist["Kernel"] = host_info["Kernel"]
     checklist["Hostname"] = host_info["Hostname"]
