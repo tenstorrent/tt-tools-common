@@ -16,7 +16,7 @@ Homepage: https://github.com/tenstorrent/tt-tools-common
 Vcs-Git: https://github.com/tenstorrent/tt-tools-common.git
 Vcs-Browser: https://github.com/tenstorrent/tt-tools-common
 
-Package: tt-tools-common
+Package: python3-tt-tools-common
 Architecture: all
 Essential: no
 Depends:
