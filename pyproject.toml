@@ -16,9 +16,6 @@ classifiers = [
   "Environment :: Console :: Curses",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3 :: Only",
@@ -36,7 +33,8 @@ dependencies = [
   'tomli',
 ]
 
-optional-dependencies.dev = [
+[project.optional-dependencies]
+dev = [
   'black>=23.11.0',
   'pre-commit>=3.5.0',
   'pyluwen>=0.7.9',
@@ -46,7 +44,6 @@ optional-dependencies.dev = [
 "Homepage" = "http://tenstorrent.com"
 "Bug Reports" = "https://github.com/tenstorrent/tt-tools-common/issues"
 "Source" = "https://github.com/tenstorrent/tt-tools-common"
-
 
 [tool.setuptools]
 include-package-data = true
