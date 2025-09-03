@@ -33,6 +33,7 @@ dependencies = [
   'requests>=2.32.3',
   'tqdm>=4.66.3',
   'pydantic>=1.2',
+  'tomli',
 ]
 
 optional-dependencies.dev = [
@@ -60,6 +61,7 @@ include-package-data = true
 [tool.setuptools.exclude-package-data]
 "*" = [
   'build',
+  'debian',
 ]
 
 [tool.setuptools.packages.find]
