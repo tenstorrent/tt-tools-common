@@ -17,7 +17,10 @@ from tt_tools_common.utils_common.tools_utils import read_refclk_counter
 from tt_tools_common.utils_common.system_utils import (
     check_driver_version,
     get_host_info,
+    is_driver_version_at_least,
+    get_driver_version
 )
+from tt_tools_common.reset_common.chip_reset import ChipReset
 
 
 class WHChipReset:
@@ -64,6 +67,18 @@ class WHChipReset:
         self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
+        
+        # Use new reset for driver version >= 2.4.0
+        if is_driver_version_at_least(get_driver_version(), "2.4.0"):
+            return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent)
+
+        if not silent:
+            print(
+                CMD_LINE_COLOR.YELLOW,
+                "Notice: Using legacy WH reset implementation. This will be removed in a later version.",
+                "Please upgrade tt-kmd to version 2.4.0 or newer to use the updated reset sequence.",
+                CMD_LINE_COLOR.ENDC
+            )
 
         # Check the driver version and bail if link reset cannot be supported
         check_driver_version(operation="board reset")
