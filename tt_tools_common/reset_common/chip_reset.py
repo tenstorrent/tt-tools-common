@@ -113,7 +113,7 @@ class ChipReset:
         pci_interfaces = list(set(pci_interfaces))
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Starting reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Starting reset on devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
 
         bdf_list = []
@@ -155,7 +155,7 @@ class ChipReset:
         # other sanity checks go here
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Finishing reset on BH devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Finishing reset on devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
 
         pci_chips = [PciChip(pci_interface=interface) for interface in pci_interfaces]
