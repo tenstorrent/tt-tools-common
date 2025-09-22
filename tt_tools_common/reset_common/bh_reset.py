@@ -67,15 +67,15 @@ class BHChipReset:
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
         
-        # Use new reset for driver version >= 2.4.0
-        if is_driver_version_at_least(get_driver_version(), "2.4.0"):
+        # Use new reset for driver version >= 2.4.1
+        if is_driver_version_at_least(get_driver_version(), "2.4.1"):
             return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent)
 
         if not silent:
             print(
                 CMD_LINE_COLOR.YELLOW,
                 "Notice: Using legacy BH reset implementation. This will be removed in a later version.",
-                "Please upgrade tt-kmd to version 2.4.0 or newer to use the updated reset sequence.",
+                "Please upgrade tt-kmd to version 2.4.1 or newer to use the updated reset sequence.",
                 CMD_LINE_COLOR.ENDC,
             )
 
