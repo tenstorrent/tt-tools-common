@@ -96,7 +96,7 @@ class ChipReset:
         """Performs a full LDS reset of a list of chips"""
 
         # Check the driver version and bail if reset cannot be supported
-        check_driver_version(operation="reset", minimum_required_version_str="2.4.0")
+        check_driver_version(operation="reset", minimum_required_version_str="2.4.1")
 
         # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
         # Check for platform and bail if it's Arm
@@ -122,7 +122,17 @@ class ChipReset:
             chip = PciChip(pci_interface=pci_interface)
             bdf = chip.get_pci_bdf()
             bdf_list.append(bdf)
-            
+        
+        for pci_interface in pci_interfaces:
+            if not self.reset_device_ioctl(pci_interface, IoctlResetFlags.RESET_PCIE_LINK):
+                print(
+                    CMD_LINE_COLOR.YELLOW,
+                    f"Warning: Secondary bus reset not completed for device at PCI index {pci_interface}. Continuing with reset.",
+                    CMD_LINE_COLOR.ENDC
+                )
+
+
+        for pci_interface in pci_interfaces:
             if reset_m3:
                 reset_flag = IoctlResetFlags.ASIC_DMC_RESET
             else:
