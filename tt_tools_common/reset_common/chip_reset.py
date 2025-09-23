@@ -11,6 +11,7 @@ import time
 import fcntl
 import struct
 import glob
+import subprocess
 from enum import IntEnum
 from typing import List
 from pyluwen import PciChip
@@ -28,6 +29,20 @@ class IoctlResetFlags(IntEnum):
     ASIC_RESET = 4
     ASIC_DMC_RESET = 5
     POST_RESET = 6
+
+def check_xen_hvm() -> bool:
+    """Check if the system is a Xen HVM guest"""
+    is_xen_hvm = False
+    try:
+        with open("/sys/hypervisor/type", "r") as f:
+            hypervisor_type = f.read().strip()
+        with open("/sys/hypervisor/guest_type", "r") as f:
+            guest_type = f.read().strip()
+        if hypervisor_type == "xen" and guest_type == "HVM":
+            is_xen_hvm = True
+    except Exception:
+        pass
+    return is_xen_hvm
 
 class ChipReset:
     """Class to perform a chip-level reset on WH and BH PCIe boards"""
@@ -91,10 +106,9 @@ class ChipReset:
 
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False,
-        m3_delay: int = 20
+        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, xenstore_filename: str = "", m3_delay: int = 20
     ) -> List[PciChip]:
-        """Performs a full LDS reset of a list of chips"""
+        """Performs a full LDS reset of a list of chips. Xenstore filename is only used in Xen HVM mode."""
 
         # Check the driver version and bail if reset cannot be supported
         check_driver_version(operation="reset", minimum_required_version_str="2.4.1")
@@ -116,6 +130,26 @@ class ChipReset:
             print(
                 f"{CMD_LINE_COLOR.BLUE} Starting reset on devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
+        # check if the system is a Xen system
+        if check_xen_hvm():
+            # Write 1 to xenstore to notify host that reset is starting.
+            print(
+                f"{CMD_LINE_COLOR.PURPLE} Xen HVM system detected, writing 1 to Xenstore file {xenstore_filename} to indicate reset start.{CMD_LINE_COLOR.ENDC}"
+            )
+            print(
+            f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. {CMD_LINE_COLOR.ENDC}"
+            )
+            # Run the subprocess with sudo privileges
+            result = subprocess.run(
+                ["sudo", "xenstore-write", f"{xenstore_filename}", "1"],
+                capture_output=True,
+                text=True
+            )
+            # Check the result
+            if result.returncode != 0:
+                print(
+                    f"{CMD_LINE_COLOR.RED} Failed to write to xenstore. Error: {result.stderr}. Please notify your system administrator about this. Still proceeding with reset ... {CMD_LINE_COLOR.ENDC}"
+                )
 
         bdf_list = []
 
@@ -145,6 +179,35 @@ class ChipReset:
             self.reset_device_ioctl(pci_interface, reset_flag)
 
         post_reset_wait = m3_delay if reset_m3 else max(2, 0.4 * len(pci_interfaces))
+        # If system is Xen HVM, write to xenstore and exit - do not attempt to re-init chips
+        if check_xen_hvm():
+            # Write to xenstore to notify host to perform a pci-detach + pci-attach of the boards
+            # NOTE: This assumes that the host is running a script to monitor the xenstore path!
+            print(
+                f"{CMD_LINE_COLOR.PURPLE} Writing to xenstore to notify host of the reset. Will not attempt to re-init chips post reset. {CMD_LINE_COLOR.ENDC}"
+            )
+            print(
+                f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. {CMD_LINE_COLOR.ENDC}"
+            )
+            # Run the subprocess with sudo privileges
+            result = subprocess.run(
+                ["sudo", "xenstore-write", f"{xenstore_filename}", "0"],
+                capture_output=True,
+                text=True
+            )
+            # Check the result
+            if result.returncode == 0:
+                print(
+                    f"{CMD_LINE_COLOR.GREEN} Successfully wrote 0 to xenstore file {xenstore_filename} to notify host of the reset. Exiting... {CMD_LINE_COLOR.ENDC}"
+                )
+                sys.exit(0)
+            else:
+                print(
+                    f"{CMD_LINE_COLOR.RED} Failed to write to xenstore. Error: {result.stderr}. Please notify your system administrator to perform a pci-detach + pci-attach of the boards: {pci_interfaces} {CMD_LINE_COLOR.ENDC}"
+                )
+                sys.exit(1)
+
+        post_reset_wait = 20 if reset_m3 else max(2, 0.4 * len(pci_interfaces))
         print(
             CMD_LINE_COLOR.BLUE,
             f"Waiting for {post_reset_wait} seconds for potential hotplug removal.",
@@ -153,7 +216,7 @@ class ChipReset:
         time.sleep(post_reset_wait)
 
         for pci_interface,bdf in zip(pci_interfaces,bdf_list):
-            new_id = self.wait_for_device_to_reappear(bdf) 
+            new_id = self.wait_for_device_to_reappear(bdf)
 
             if self.reset_device_ioctl(new_id, IoctlResetFlags.POST_RESET):
                 print(
@@ -164,7 +227,7 @@ class ChipReset:
                     f"{CMD_LINE_COLOR.RED} Post-reset actions did not complete successfully for device at PCI index {pci_interface}. {CMD_LINE_COLOR.ENDC}"
                 )
                 sys.exit(1)
-        
+
         # All went well print success message
         # other sanity checks go here
         if not silent:
