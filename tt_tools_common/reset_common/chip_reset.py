@@ -122,7 +122,10 @@ class ChipReset:
             chip = PciChip(pci_interface=pci_interface)
             bdf = chip.get_pci_bdf()
             bdf_list.append(bdf)
-        
+            # Force garbage collection of the chip object to close any open file descriptors
+            # This is necessary for dockerized containers
+            del chip
+
         for pci_interface in pci_interfaces:
             if not self.reset_device_ioctl(pci_interface, IoctlResetFlags.RESET_PCIE_LINK):
                 print(
