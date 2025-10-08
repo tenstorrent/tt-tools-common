@@ -1,3 +1,20 @@
+tt-tools-common (1.4.30) noble; urgency=medium
+
+  [ Jonathan Baker ]
+  * Community auto-tagging moved to new script
+  * Fix path error
+  * Updated script path
+  * Fixed permissions issue
+  * Fixed permissions
+
+  [ Samridhi Bansal ]
+  * Add deletion of chip object to avoid open file descriptor persisting in containers
+
+  [ Tenstorrent Releases ]
+  * pyproject.toml- updating version to 1.4.30
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Wed, 08 Oct 2025 17:27:43 +0000
+
 tt-tools-common (1.4.29) noble; urgency=medium
 
   [ Petra Alexson ]
