@@ -91,7 +91,8 @@ class ChipReset:
 
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
+        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False,
+        m3_delay: int = 20
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
@@ -143,7 +144,7 @@ class ChipReset:
 
             self.reset_device_ioctl(pci_interface, reset_flag)
 
-        post_reset_wait = 20 if reset_m3 else max(2, 0.4 * len(pci_interfaces))
+        post_reset_wait = m3_delay if reset_m3 else max(2, 0.4 * len(pci_interfaces))
         print(
             CMD_LINE_COLOR.BLUE,
             f"Waiting for {post_reset_wait} seconds for potential hotplug removal.",
