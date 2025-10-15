@@ -63,13 +63,14 @@ class BHChipReset:
             os.close(dev_fd)
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
+        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False,
+        m3_delay: int = 20
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
-        
+
         # Use new reset for driver version >= 2.4.1
         if is_driver_version_at_least(get_driver_version(), "2.4.1"):
-            return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent)
+            return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent, m3_delay)
 
         if not silent:
             print(
@@ -112,7 +113,7 @@ class BHChipReset:
             pci_bdf_list[pci_interface] = pci_bdf
             if reset_m3:
                 # A full bmfw upgrade can take awhile
-                post_reset_wait = 60
+                post_reset_wait = max(60, m3_delay)
                 chip.arc_msg(self.MSG_TYPE_TRIGGER_RESET, wait_for_done=False, arg0=3)
             else:
                 self.reset_device_ioctl(
