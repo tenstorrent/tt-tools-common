@@ -1,3 +1,18 @@
+tt-tools-common (1.4.31) noble; urgency=medium
+
+  [ John 'Warthog9' Hawley ]
+  * Fixing older setuptools again
+  * Workflows - Debian Builds: include changes files in artifacts
+  * Setting minimal python version to 3.10 or newer
+
+  [ Daniel DeGrasse ]
+  * support configurable reset delay for M3 on blackhole
+
+  [ Tenstorrent Releases ]
+  * pyproject.toml- updating version to 1.4.31
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Thu, 16 Oct 2025 18:00:55 +0000
+
 tt-tools-common (1.4.30) noble; urgency=medium
 
   [ Jonathan Baker ]
