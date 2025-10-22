@@ -13,9 +13,9 @@ def main():
     for i, dev in enumerate(devices):
         if dev.as_wh() and not dev.is_remote():
             wh_pci_idx.append(i)
-
-    WHChipReset().full_lds_reset(pci_interfaces=wh_pci_idx)
-
+            del dev
+        print(f"Resetting WH PCI interface index {i}")
+        WHChipReset().full_lds_reset(pci_interfaces=[i])
 
 if __name__ == "__main__":
     main()

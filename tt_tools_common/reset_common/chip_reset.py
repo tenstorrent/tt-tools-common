@@ -16,6 +16,7 @@ from enum import IntEnum
 from typing import List
 from pyluwen import PciChip
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
+import threading
 from tt_tools_common.utils_common.system_utils import (
     check_driver_version,
     get_host_info,
@@ -106,7 +107,7 @@ class ChipReset:
 
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, xenstore_filename: str = "", m3_delay: int = 20
+        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, m3_delay: int = 20
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips. Xenstore filename is only used in Xen HVM mode."""
 
@@ -130,26 +131,6 @@ class ChipReset:
             print(
                 f"{CMD_LINE_COLOR.BLUE} Starting reset on devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
-        # check if the system is a Xen system
-        if check_xen_hvm():
-            # Write 1 to xenstore to notify host that reset is starting.
-            print(
-                f"{CMD_LINE_COLOR.PURPLE} Xen HVM system detected, writing 1 to Xenstore file {xenstore_filename} to indicate reset start.{CMD_LINE_COLOR.ENDC}"
-            )
-            print(
-            f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. {CMD_LINE_COLOR.ENDC}"
-            )
-            # Run the subprocess with sudo privileges
-            result = subprocess.run(
-                ["sudo", "xenstore-write", f"{xenstore_filename}", "1"],
-                capture_output=True,
-                text=True
-            )
-            # Check the result
-            if result.returncode != 0:
-                print(
-                    f"{CMD_LINE_COLOR.RED} Failed to write to xenstore. Error: {result.stderr}. Please notify your system administrator about this. Still proceeding with reset ... {CMD_LINE_COLOR.ENDC}"
-                )
 
         bdf_list = []
 
@@ -160,6 +141,32 @@ class ChipReset:
             # Force garbage collection of the chip object to close any open file descriptors
             # This is necessary for dockerized containers
             del chip
+
+        # check if the system is a Xen system
+        xenstore_filenames = []
+        if check_xen_hvm():
+            # Run the subprocess with sudo privileges
+            for pci_bdf in bdf_list:
+                # Write 1 to xenstore to notify host that reset is starting.
+                bdf_parts = pci_bdf.split(":")
+                xenstore_filename = f"pci_hard_reset/{bdf_parts[1]}_{bdf_parts[2].split('.')[0]}-{bdf_parts[2].split('.')[1]}"
+                xenstore_filenames.append(xenstore_filename)
+                print(
+                    f"{CMD_LINE_COLOR.PURPLE} Xen HVM system detected, writing 1 to Xenstore file {xenstore_filename} to indicate reset start.{CMD_LINE_COLOR.ENDC}"
+                )
+                print(
+                f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. {CMD_LINE_COLOR.ENDC}"
+                )
+                result = subprocess.run(
+                    ["sudo", "xenstore-write", f"{xenstore_filename}", "1"],
+                    capture_output=True,
+                    text=True
+                )
+                # Check the result
+                if result.returncode != 0:
+                    print(
+                        f"{CMD_LINE_COLOR.RED} Failed to write to xenstore. Error: {result.stderr}. Please notify your system administrator about this. Still proceeding with reset ... {CMD_LINE_COLOR.ENDC}"
+                    )
 
         for pci_interface in pci_interfaces:
             if not self.reset_device_ioctl(pci_interface, IoctlResetFlags.RESET_PCIE_LINK):
@@ -179,33 +186,46 @@ class ChipReset:
             self.reset_device_ioctl(pci_interface, reset_flag)
 
         post_reset_wait = m3_delay if reset_m3 else max(2, 0.4 * len(pci_interfaces))
-        # If system is Xen HVM, write to xenstore and exit - do not attempt to re-init chips
+
         if check_xen_hvm():
-            # Write to xenstore to notify host to perform a pci-detach + pci-attach of the boards
-            # NOTE: This assumes that the host is running a script to monitor the xenstore path!
-            print(
-                f"{CMD_LINE_COLOR.PURPLE} Writing to xenstore to notify host of the reset. Will not attempt to re-init chips post reset. {CMD_LINE_COLOR.ENDC}"
-            )
-            print(
-                f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. {CMD_LINE_COLOR.ENDC}"
-            )
-            # Run the subprocess with sudo privileges
-            result = subprocess.run(
-                ["sudo", "xenstore-write", f"{xenstore_filename}", "0"],
-                capture_output=True,
-                text=True
-            )
-            # Check the result
-            if result.returncode == 0:
+            # Wait time of 5min after which we will timeout waiting for xenstore files to be removed
+            xen_wait_time = 300
+            if xenstore_filenames == []:
                 print(
-                    f"{CMD_LINE_COLOR.GREEN} Successfully wrote 0 to xenstore file {xenstore_filename} to notify host of the reset. Exiting... {CMD_LINE_COLOR.ENDC}"
-                )
-                sys.exit(0)
-            else:
-                print(
-                    f"{CMD_LINE_COLOR.RED} Failed to write to xenstore. Error: {result.stderr}. Please notify your system administrator to perform a pci-detach + pci-attach of the boards: {pci_interfaces} {CMD_LINE_COLOR.ENDC}"
+                    f"{CMD_LINE_COLOR.RED} No xenstore filenames found for Xen HVM reset - did we write to them?? Exiting... {CMD_LINE_COLOR.ENDC}"
                 )
                 sys.exit(1)
+            # Check if xenstore files no longer exist, in parallel threads
+            def wait_for_xenstore_removal(xenstore_filename):
+                print(
+                    f"{CMD_LINE_COLOR.BLUE} Waiting for Xenstore file {xenstore_filename} to be removed by the host... {CMD_LINE_COLOR.ENDC}"
+                )
+                deadline = time.time() + xen_wait_time
+                while time.time() < deadline:
+                    result = subprocess.run(
+                        ["sudo", "xenstore-read", f"{xenstore_filename}"],
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode != 0:
+                        print(
+                            f"{CMD_LINE_COLOR.GREEN} Xenstore file {xenstore_filename} has been removed by the host. Continuing... {CMD_LINE_COLOR.ENDC}"
+                        )
+                        return
+                    time.sleep(1)
+                print(
+                    f"{CMD_LINE_COLOR.RED} Timeout waiting for xenstore file {xenstore_filename} to be removed. Exiting... {CMD_LINE_COLOR.ENDC}"
+                )
+                sys.exit(1)
+
+            threads = []
+            for xenstore_filename in xenstore_filenames:
+                t = threading.Thread(target=wait_for_xenstore_removal, args=(xenstore_filename,))
+                t.start()
+                threads.append(t)
+            for t in threads:
+                t.join()
+
 
         post_reset_wait = 20 if reset_m3 else max(2, 0.4 * len(pci_interfaces))
         print(

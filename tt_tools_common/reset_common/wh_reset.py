@@ -66,18 +66,12 @@ class WHChipReset:
             os.close(dev_fd)
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, xenstore_filename: str = ""
+        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
 
-        # Check if we are in a Xen HVM guest
-        if check_xen_hvm():
-            # perform reset using ChipReset class which handles Xen HVM case
-            # the check for driver version > 2.4.1 is already done in ChipReset class
-            return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent, xenstore_filename)
-
-        # Use new reset for driver version >= 2.4.1
-        if is_driver_version_at_least(get_driver_version(), "2.4.1"):
+        # Use new reset for driver version >= 2.4.1 or if in Xen HVM mode. Xen mode also requires newer driver.
+        if is_driver_version_at_least(get_driver_version(), "2.4.1") or check_xen_hvm():
             return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent)
 
         if not silent:
