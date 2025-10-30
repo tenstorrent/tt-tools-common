@@ -20,8 +20,10 @@ from tt_tools_common.utils_common.system_utils import (
     is_driver_version_at_least,
     get_driver_version
 )
-from tt_tools_common.reset_common.chip_reset import ChipReset
-
+from tt_tools_common.reset_common.chip_reset import (
+    ChipReset,
+    check_xen_hvm,
+)
 
 class WHChipReset:
     """Class to perform a chip level reset on WH PCIe boards"""
@@ -67,9 +69,9 @@ class WHChipReset:
         self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips"""
-        
-        # Use new reset for driver version >= 2.4.1
-        if is_driver_version_at_least(get_driver_version(), "2.4.1"):
+
+        # Use new reset for driver version >= 2.4.1 or if in Xen HVM mode. Xen mode also requires newer driver.
+        if is_driver_version_at_least(get_driver_version(), "2.4.1") or check_xen_hvm():
             return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent)
 
         if not silent:
