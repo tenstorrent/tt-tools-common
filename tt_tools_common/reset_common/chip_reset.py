@@ -41,8 +41,13 @@ def check_xen_hvm() -> bool:
             guest_type = f.read().strip()
         if hypervisor_type == "xen" and guest_type == "HVM":
             is_xen_hvm = True
-    except Exception:
+    except FileNotFoundError:
+        # One or both files do not exist
         pass
+    except OSError:
+        # Other OS-related errors (e.g., permission denied)
+        pass
+    # All other types of errors should throw an exception
     return is_xen_hvm
 
 class ChipReset:
@@ -145,6 +150,11 @@ class ChipReset:
         # check if the system is a Xen system
         xenstore_filenames = []
         if check_xen_hvm():
+            # Validate and remember users sudo credentials for 5min
+            print(
+            f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. It will be cached for 5 minutes. {CMD_LINE_COLOR.ENDC}"
+            )
+            subprocess.run(["sudo", "-v"])
             # Run the subprocess with sudo privileges
             for pci_bdf in bdf_list:
                 # Write 1 to xenstore to notify host that reset is starting.
@@ -153,9 +163,6 @@ class ChipReset:
                 xenstore_filenames.append(xenstore_filename)
                 print(
                     f"{CMD_LINE_COLOR.PURPLE} Xen HVM system detected, writing 1 to Xenstore file {xenstore_filename} to indicate reset start.{CMD_LINE_COLOR.ENDC}"
-                )
-                print(
-                f"{CMD_LINE_COLOR.YELLOW} User needs sudo privileges to write to xenstore. You may be prompted for your password. {CMD_LINE_COLOR.ENDC}"
                 )
                 result = subprocess.run(
                     ["sudo", "xenstore-write", f"{xenstore_filename}", "1"],
@@ -196,6 +203,11 @@ class ChipReset:
                 )
                 sys.exit(1)
             # Check if xenstore files no longer exist, in parallel threads
+            # Validate and remember users sudo credentials for 5min
+            print(
+            f"{CMD_LINE_COLOR.YELLOW} Revalidating sudo access... You might be prompted for your sudo password. {CMD_LINE_COLOR.ENDC}"
+            )
+            subprocess.run(["sudo", "-v"])
             def wait_for_xenstore_removal(xenstore_filename):
                 print(
                     f"{CMD_LINE_COLOR.BLUE} Waiting for Xenstore file {xenstore_filename} to be removed by the host... {CMD_LINE_COLOR.ENDC}"
