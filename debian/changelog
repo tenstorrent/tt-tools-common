@@ -1,3 +1,15 @@
+tt-tools-common (1.4.32) noble; urgency=medium
+
+  [ Samridhi Bansal ]
+  * Updated tools common reset to check for xen hvm and  - not perform pci rescan and write to xenstore at start& end of reset  - added custom xenstore filename to make it host side customizable
+  * Xen updates: removed write and added a wait for xenstore file to be cleared
+  * Updated sudo access to be cached and catch any Xen exceptions
+
+  [ Tenstorrent Releases ]
+  * pyproject.toml- updating version to 1.4.32
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Thu, 30 Oct 2025 21:51:37 +0000
+
 tt-tools-common (1.4.31) noble; urgency=medium
 
   [ John 'Warthog9' Hawley ]
