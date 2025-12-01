@@ -177,13 +177,10 @@ class TTHostCompatibilityMenu(Container):
 
     def render(self) -> RenderResult:
         text = Text()
-        # Track the number of lines to set the widget height
-        num_lines = 0
         for key, value in self.data.items():
             line_leader = Text("* ")
             # Render only one line
             if type(value) is str:
-                num_lines += 1
                 k = Text(
                     f"{key.ljust(self.justify_width)}" + ": ",
                     style=Style(color="#ffd10a", bold=True),
@@ -192,7 +189,6 @@ class TTHostCompatibilityMenu(Container):
                 text.append_text(line_leader).append_text(k).append_text(v)
             # Render two lines, the current state and the recommendation
             elif type(value) is tuple:
-                num_lines += 2
                 k = Text(
                     f"{key.ljust(self.justify_width)}" + ": ",
                     style=Style(color="#ffd10a", bold=True),
@@ -210,10 +206,6 @@ class TTHostCompatibilityMenu(Container):
                 # TODO: Raise warning here?
                 pass
         text.rstrip()
-
-        self.styles.height = (
-            4 + num_lines
-        )  # Dynamically style widget height to fit all recommendations (+4 for border/padding)
 
         return text
 
