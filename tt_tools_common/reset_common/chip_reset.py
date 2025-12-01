@@ -192,8 +192,6 @@ class ChipReset:
 
             self.reset_device_ioctl(pci_interface, reset_flag)
 
-        post_reset_wait = m3_delay if reset_m3 else max(2, 0.4 * len(pci_interfaces))
-
         if check_xen_hvm():
             # Wait time of 5min after which we will timeout waiting for xenstore files to be removed
             xen_wait_time = 300
@@ -239,7 +237,7 @@ class ChipReset:
                 t.join()
 
 
-        post_reset_wait = 20 if reset_m3 else max(2, 0.4 * len(pci_interfaces))
+        post_reset_wait = m3_delay if reset_m3 else max(2, 0.4 * len(pci_interfaces))
         print(
             CMD_LINE_COLOR.BLUE,
             f"Waiting for {post_reset_wait} seconds for potential hotplug removal.",
