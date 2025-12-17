@@ -112,7 +112,12 @@ class ChipReset:
 
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, m3_delay: int = 20
+        self,
+        pci_interfaces: List[int],
+        reset_m3: bool = False,
+        silent: bool = False,
+        m3_delay: int = 20,
+        secondary_bus_reset: bool = True,
     ) -> List[PciChip]:
         """Performs a full LDS reset of a list of chips. Xenstore filename is only used in Xen HVM mode."""
 
@@ -175,13 +180,15 @@ class ChipReset:
                         f"{CMD_LINE_COLOR.RED} Failed to write to xenstore. Error: {result.stderr}. Please notify your system administrator about this. Still proceeding with reset ... {CMD_LINE_COLOR.ENDC}"
                     )
 
-        for pci_interface in pci_interfaces:
-            if not self.reset_device_ioctl(pci_interface, IoctlResetFlags.RESET_PCIE_LINK):
-                print(
-                    CMD_LINE_COLOR.YELLOW,
-                    f"Warning: Secondary bus reset not completed for device at PCI index {pci_interface}. Continuing with reset.",
-                    CMD_LINE_COLOR.ENDC
-                )
+        # Perform secondary bus reset (SBR) before issuing ASIC reset
+        if secondary_bus_reset:
+            for pci_interface in pci_interfaces:
+                if not self.reset_device_ioctl(pci_interface, IoctlResetFlags.RESET_PCIE_LINK):
+                    print(
+                        CMD_LINE_COLOR.YELLOW,
+                        f"Warning: Secondary bus reset not completed for device at PCI index {pci_interface}. Continuing with reset.",
+                        CMD_LINE_COLOR.ENDC
+                    )
 
 
         for pci_interface in pci_interfaces:
