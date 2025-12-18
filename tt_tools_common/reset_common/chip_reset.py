@@ -119,7 +119,19 @@ class ChipReset:
         m3_delay: int = 20,
         secondary_bus_reset: bool = True,
     ) -> List[PciChip]:
-        """Performs a full LDS reset of a list of chips. Xenstore filename is only used in Xen HVM mode."""
+        """
+        Performs a full LDS reset of a list of chips. Xenstore filename is only used in Xen HVM mode.
+
+        Args:
+            pci_interfaces (List[int]): List of PCI interfaces to reset.
+            reset_m3 (bool): Whether M3/DMC should be reset.
+            silent (bool): Whether prints should be skipped.
+            m3_delay (int): Amount of time to wait after issuing M3 reset (seconds).
+            secondary_bus_reset (bool): Whether to issue secondary bus reset before ASIC reset.
+
+        Returns:
+            List[PciChip]: List of PciChips that were reset.
+        """
 
         # Check the driver version and bail if reset cannot be supported
         check_driver_version(operation="reset", minimum_required_version_str="2.4.1")

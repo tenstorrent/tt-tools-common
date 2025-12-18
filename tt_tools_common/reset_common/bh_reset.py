@@ -68,7 +68,19 @@ class BHChipReset:
     def full_lds_reset(
         self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, xenstore_filename: str = "", m3_delay: int = 20
     ) -> List[PciChip]:
-        """Performs a full LDS reset of a list of chips"""
+        """
+        Performs a full LDS reset of a list of chips.
+
+        Args:
+            pci_interfaces (List[int]): List of PCI interfaces to reset.
+            reset_m3 (bool): Whether M3/DMC should be reset.
+            silent (bool): Whether prints should be skipped.
+            xenstore_filename (str): Filename used by XenStore 
+            m3_delay (int): Amount of time to wait after issuing M3 reset (seconds).
+
+        Returns:
+            List[PciChip]: List of PciChips that were reset.
+        """
 
         # Check if we are in a Xen HVM guest
         if check_xen_hvm():

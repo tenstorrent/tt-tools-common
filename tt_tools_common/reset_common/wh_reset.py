@@ -68,7 +68,17 @@ class WHChipReset:
     def full_lds_reset(
         self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False
     ) -> List[PciChip]:
-        """Performs a full LDS reset of a list of chips"""
+        """
+        Performs a full LDS reset of a list of chips.
+
+        Args:
+            pci_interfaces (List[int]): List of PCI interfaces to reset.
+            reset_m3 (bool): Whether M3 should be reset.
+            silent (bool): Whether prints should be skipped.
+
+        Returns:
+            List[PciChip]: List of PciChips that were reset.
+        """
 
         # Use new reset for driver version >= 2.4.1 or if in Xen HVM mode. Xen mode also requires newer driver.
         if is_driver_version_at_least(get_driver_version(), "2.4.1") or check_xen_hvm():
