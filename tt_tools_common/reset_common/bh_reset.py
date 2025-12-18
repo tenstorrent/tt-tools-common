@@ -66,7 +66,12 @@ class BHChipReset:
             os.close(dev_fd)
 
     def full_lds_reset(
-        self, pci_interfaces: List[int], reset_m3: bool = False, silent: bool = False, xenstore_filename: str = "", m3_delay: int = 20
+        self,
+        pci_interfaces: List[int],
+        reset_m3: bool = False,
+        silent: bool = False,
+        m3_delay: int = 20,
+        secondary_bus_reset: bool = True,
     ) -> List[PciChip]:
         """
         Performs a full LDS reset of a list of chips.
@@ -75,22 +80,23 @@ class BHChipReset:
             pci_interfaces (List[int]): List of PCI interfaces to reset.
             reset_m3 (bool): Whether M3/DMC should be reset.
             silent (bool): Whether prints should be skipped.
-            xenstore_filename (str): Filename used by XenStore 
             m3_delay (int): Amount of time to wait after issuing M3 reset (seconds).
+            secondary_bus_reset (bool): Whether to issue secondary bus reset before ASIC reset.
 
         Returns:
             List[PciChip]: List of PciChips that were reset.
         """
 
-        # Check if we are in a Xen HVM guest
-        if check_xen_hvm():
-            # perform reset using ChipReset class which handles Xen HVM case
-            # the check for driver version > 2.4.1 is already done in ChipReset class
-            return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent, xenstore_filename)
-
         # Use new reset for driver version >= 2.4.1
-        if is_driver_version_at_least(get_driver_version(), "2.4.1"):
-            return ChipReset().full_lds_reset(pci_interfaces, reset_m3, silent, m3_delay)
+        # or perform reset using ChipReset class which handles Xen HVM case, will error out if driver version < 2.4.1
+        if is_driver_version_at_least(get_driver_version(), "2.4.1") or check_xen_hvm():
+            return ChipReset().full_lds_reset(
+                pci_interfaces,
+                reset_m3=reset_m3,
+                silent=silent,
+                m3_delay=m3_delay,
+                secondary_bus_reset=secondary_bus_reset
+            )
 
         if not silent:
             print(
@@ -99,9 +105,6 @@ class BHChipReset:
                 "Please upgrade tt-kmd to version 2.4.1 or newer to use the updated reset sequence.",
                 CMD_LINE_COLOR.ENDC,
             )
-
-        # TODO: FOR BH Check the driver version and bail if link reset cannot be supported
-        # check_driver_version(operation="board reset")
 
         # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
         # Check for platform and bail if it's Arm
