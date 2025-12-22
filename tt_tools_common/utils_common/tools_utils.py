@@ -200,8 +200,6 @@ def init_logging(log_folder: str):
 
 
 def read_refclk_counter(chip) -> int:
-    if chip.as_gs():
-        return None
     high_addr = chip.axi_translate("ARC_RESET.REFCLK_COUNTER_HIGH").addr
     low_addr = chip.axi_translate("ARC_RESET.REFCLK_COUNTER_LOW").addr
     high1 = chip.axi_read32(high_addr)
