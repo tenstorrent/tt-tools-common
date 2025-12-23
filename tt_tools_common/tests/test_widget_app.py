@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: © 2024 Tenstorrent Inc.
 # SPDX-License-Identifier: Apache-2.0
-
 """
-EXAMPLE APP FOR TT-TOOLS
-Tests all basic widgets and themes for TT-Tools
+Test suite for TT-Tools widgets and themes
 """
 from typing import List, Tuple
+import pytest
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Footer, Header, Static, DataTable
@@ -54,7 +53,7 @@ class TTApp(App):
         data = {"Menu 1": 1, "Menu 2": 2, "Menu 3": 3}
         yield TTHeader(self.app_name, self.app_version)
         with Horizontal():
-            with Vertical():  # TODO: Specify widget width & height on layout
+            with Vertical():
                 yield TTMenu(title="Menu 1", data=data, id="menu_1")
                 yield TTMenu(title="Menu 2", data=data, id="menu_2")
             yield TTDataTable(
@@ -68,7 +67,6 @@ class TTApp(App):
     def on_mount(self) -> None:
         """Event handler called when widget is added to the app."""
         tt_dt = self.get_widget_by_id(id="dt_example")
-        # initial data rows for TTDataTable
         tt_dt.dt.add_rows(
             [
                 [
@@ -90,5 +88,17 @@ class TTApp(App):
         self.push_screen(TTConfirmBox(text="Are you sure you want to...?"))
 
 
-if __name__ == "__main__":
-    TTApp().run()
+@pytest.fixture
+def app():
+    """Fixture that creates a test app instance."""
+    return TTApp()
+
+
+@pytest.mark.asyncio
+async def test_app_creation(app):
+    """Test that the app can be created."""
+    assert app is not None
+    assert app.app_name == "TT-App Example"
+    assert app.app_version == "1.0.0"
+
+# TODO: Add Textual tests
