@@ -1,3 +1,9 @@
+tt-tools-common (1.6.0) noble; urgency=medium
+
+  * pyproject.toml- updating version to 1.6.0
+
+ -- Tenstorrent Releases <releases@tenstorrent.com>  Tue, 23 Dec 2025 20:59:35 +0000
+
 tt-tools-common (1.5.1) noble; urgency=medium
 
   [ Petra Alexson ]
