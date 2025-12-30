@@ -21,13 +21,15 @@ def pci_indices():
     return pci_idx
 
 
-def test_detect_chips_with_callback(requires_hardware):
+@pytest.mark.requires_hardware
+def test_detect_chips_with_callback():
     """Test that detect_chips_with_callback returns devices."""
     devices = detect_chips_with_callback()
     assert devices is not None
 
 
-def test_detect_chips_with_callback_after_reset(pci_indices, requires_hardware):
+@pytest.mark.requires_hardware
+def test_detect_chips_with_callback_after_reset(pci_indices):
     """Test detect_chips_with_callback works after WH reset."""
     if not pci_indices:
         pytest.skip("No chips detected")

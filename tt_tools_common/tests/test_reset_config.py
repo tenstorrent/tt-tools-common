@@ -36,7 +36,8 @@ def test_parse_reset_input_all():
     assert result.type == ResetType.ALL
 
 
-def test_generate_reset_logs(devices, requires_hardware):
+@pytest.mark.requires_hardware
+def test_generate_reset_logs(devices):
     """Test generating default reset logs."""
     file_path = generate_reset_logs(devices)
     assert file_path is not None

@@ -47,6 +47,11 @@ dev = [
 "Bug Reports" = "https://github.com/tenstorrent/tt-tools-common/issues"
 "Source" = "https://github.com/tenstorrent/tt-tools-common"
 
+[tool.pytest.ini_options]
+markers = [
+  "requires_hardware: marks tests as requiring Tenstorrent hardware"
+]
+
 [tool.setuptools]
 include-package-data = true
 
