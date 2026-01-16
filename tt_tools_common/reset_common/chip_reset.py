@@ -59,8 +59,10 @@ class ChipReset:
 
     def reset_device_ioctl(self, interface_id: int, flags: int) -> bool:
         dev_path = f"/dev/tenstorrent/{interface_id}"
+        # O_APPEND signals to KMD 2.6.0+ that we are power-aware, skipping
+        # power state initialization that could worsen a hung device.
         dev_fd = os.open(
-            dev_path, os.O_RDWR | os.O_CLOEXEC
+            dev_path, os.O_RDWR | os.O_CLOEXEC | os.O_APPEND
         )  # Raises FileNotFoundError and other appropriate exceptions.
         try:
             reset_device_in_struct = "II"
