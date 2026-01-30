@@ -6,13 +6,11 @@ Test suite for TT-Tools widgets and themes
 from typing import List, Tuple
 import pytest
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Footer, Header, Static, DataTable
-from textual.css.query import NoMatches
+from textual.containers import Horizontal, Vertical
 
 from tt_tools_common.ui_common.widgets import (
-    TTHeader,
     TTFooter,
+    TTHeader,
     TTDataTable,
     TTMenu,
     TTConfirmBox,
@@ -62,7 +60,7 @@ class TTApp(App):
                 id="dt_example",
             )
             yield TTMenu(title="Right Menu", data=data, id="menu_3")
-        yield Footer()
+        yield TTFooter()
 
     def on_mount(self) -> None:
         """Event handler called when widget is added to the app."""

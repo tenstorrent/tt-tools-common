@@ -31,11 +31,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[test]"
 
       - name: Run tests (no hardware required)
         run: |
-          pytest tt_tools_common/tests/ -v -m "not requires_hardware"
+          pytest tests/ -v -m "not requires_hardware"
 
   test-hardware:
     name: Run Hardware Tests (${{ matrix.runner }})
@@ -59,8 +59,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[test]"
 
       - name: Run hardware tests
         run: |
-          pytest tt_tools_common/tests/ -v -m requires_hardware
+          pytest tests/ -v -m requires_hardware
