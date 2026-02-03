@@ -266,11 +266,13 @@ def detect_chips_with_callback(
     arc_count = 0
     dram_count = 0
     spinner = ["\\", "|", "/", "-"]
+    is_tty = sys.stdout.isatty()
+    last_chip_count_printed = None
 
     last_draw = time.time()
 
     def chip_detect_callback(status):
-        nonlocal chip_count, last_draw, block_count, arc_count, dram_count
+        nonlocal chip_count, last_draw, block_count, arc_count, dram_count, last_chip_count_printed
 
         if status.new_chip():
             chip_count += 1
@@ -279,21 +281,28 @@ def detect_chips_with_callback(
         chip_count = max(chip_count, 0)
 
         # Move the cursor and delete the previous block of printed lines
-        if block_count > 0 and print_status:
+        if block_count > 0 and print_status and is_tty:
             print(f"\033[{block_count}A", end="", flush=True)
             print(f"\033[J", end="", flush=True)
 
-        if print_status:
+        if print_status and is_tty:
             print(
                 f"\r{CMD_LINE_COLOR.PURPLE} Detected Chips: {CMD_LINE_COLOR.YELLOW}{chip_count}{CMD_LINE_COLOR.ENDC}\n",
                 end="",
                 flush=True,
             )
             block_count = 1
+        elif print_status and not is_tty:
+            if chip_count != last_chip_count_printed:
+                print(
+                    f"{CMD_LINE_COLOR.PURPLE} Detected Chips: {CMD_LINE_COLOR.YELLOW}{chip_count}{CMD_LINE_COLOR.ENDC}",
+                    flush=True,
+                )
+                last_chip_count_printed = chip_count
 
         # Prune and update the status string
         status_string = status.status_string()
-        if status_string is not None and local_only is False and print_status is True:
+        if status_string is not None and local_only is False and print_status is True and is_tty:
             # remove empty lines
             for line in list(filter(None, status_string.splitlines())):
                 # Up the counter for each line printed
