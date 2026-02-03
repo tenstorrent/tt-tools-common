@@ -15,9 +15,9 @@ def pci_indices():
     """Fixture that returns list of chip PCI indices"""
     pci_idx = []
     devices = detect_chips()
-    for i, dev in enumerate(devices):
+    for dev in devices:
         if not dev.is_remote():
-            pci_idx.append(i)
+            pci_idx.append(dev.get_pci_interface_id())
     return pci_idx
 
 
