@@ -10,5 +10,5 @@ from tt_tools_common.reset_common.chip_reset import ChipReset
 @pytest.mark.requires_hardware
 def test_full_lds_reset(devices):
     """Test full LDS reset on all detected chips."""
-    pci_interfaces = list(range(len(devices)))
+    pci_interfaces = [dev.get_pci_interface_id() for dev in devices if not dev.is_remote()]
     ChipReset().full_lds_reset(pci_interfaces=pci_interfaces)
