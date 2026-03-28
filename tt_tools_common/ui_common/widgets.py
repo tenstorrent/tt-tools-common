@@ -100,17 +100,16 @@ class TTDataTable(ScrollableContainer):
         #     [len(x)
         #      for x in rows]), "Data doesn't have expected num of columns"
 
+        if self.dt.row_count != len(rows):
+            self.dt.clear()
+            self.dt.add_rows(rows)
+            return
+
         for i, row in enumerate(rows):
             for j, val in enumerate(row):
-                try:
-                    # update cell values one by one
-                    self.dt.update_cell_at(
-                        coordinate=Coordinate(column=j, row=i), value=val
-                    )
-                except CellDoesNotExist:
-                    # there are more rows than there used to be
-                    self.dt.clear()
-                    self.dt.add_rows(rows)
+                self.dt.update_cell_at(
+                    coordinate=Coordinate(column=j, row=i), value=val
+                )
 
     def compose(self) -> ComposeResult:
         container = ScrollableContainer(self.dt, id=self.id)
