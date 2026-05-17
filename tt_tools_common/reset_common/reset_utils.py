@@ -96,7 +96,9 @@ def generate_reset_logs(devices, result_filename: str = None):
     time_now = datetime.datetime.now()
     gs_pci_idx = []
     wh_pci_idx = []
-    for i, dev in devices.items():
+    # With the next line, this function will work whether devices is a dict of device objects or a list of device objects.
+    dev_iter = devices.values() if isinstance(devices, dict) else devices
+    for dev in dev_iter:
         if dev.as_wh() and not dev.is_remote():
             wh_pci_idx.append(dev.get_pci_interface_id())
     reset_log = log.HostResetLog(
