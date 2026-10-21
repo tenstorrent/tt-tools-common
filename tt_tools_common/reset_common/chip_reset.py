@@ -93,6 +93,7 @@ class ChipReset:
             CMD_LINE_COLOR.ENDC,)
         deadline = time.time() + timeout
         device_reappeared = False
+        interface_id = None
 
         while time.time() < deadline and not device_reappeared:
             matches = glob.glob(f"/sys/bus/pci/devices/{bdf}/tenstorrent/tenstorrent!*")
@@ -103,9 +104,10 @@ class ChipReset:
                     device_reappeared = True
 
         if not device_reappeared:
+            target_desc = f"PCI index {interface_id} (BDF {bdf})" if interface_id is not None else f"PCI BDF {bdf}"
             print(
                 CMD_LINE_COLOR.RED,
-                f"Timeout waiting for device at PCI index {interface_id} to reappear.",
+                f"Timeout waiting for device at {target_desc} to reappear.",
                 CMD_LINE_COLOR.ENDC,
             )
             sys.exit(1)
@@ -266,16 +268,18 @@ class ChipReset:
         )
         time.sleep(post_reset_wait)
 
+        new_pci_interfaces = []
         for pci_interface,bdf in zip(pci_interfaces,bdf_list):
             new_id = self.wait_for_device_to_reappear(bdf)
+            new_pci_interfaces.append(new_id)
 
             if self.reset_device_ioctl(new_id, IoctlResetFlags.POST_RESET):
                 print(
-                    f"{CMD_LINE_COLOR.GREEN} Reset successfully completed for device at PCI index {pci_interface}. {CMD_LINE_COLOR.ENDC}"
+                    f"{CMD_LINE_COLOR.GREEN} Reset successfully completed for device at PCI index {new_id}. {CMD_LINE_COLOR.ENDC}"
                 )
             else:
                 print(
-                    f"{CMD_LINE_COLOR.RED} Post-reset actions did not complete successfully for device at PCI index {pci_interface}. {CMD_LINE_COLOR.ENDC}"
+                    f"{CMD_LINE_COLOR.RED} Post-reset actions did not complete successfully for device at PCI index {new_id}. {CMD_LINE_COLOR.ENDC}"
                 )
                 sys.exit(1)
 
@@ -283,8 +287,8 @@ class ChipReset:
         # other sanity checks go here
         if not silent:
             print(
-                f"{CMD_LINE_COLOR.BLUE} Finishing reset on devices at PCI indices: {str(pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
+                f"{CMD_LINE_COLOR.BLUE} Finishing reset on devices at PCI indices: {str(new_pci_interfaces)[1:-1]} {CMD_LINE_COLOR.ENDC}"
             )
 
-        pci_chips = [PciChip(pci_interface=interface) for interface in pci_interfaces]
+        pci_chips = [PciChip(pci_interface=interface) for interface in new_pci_interfaces]
         return pci_chips
