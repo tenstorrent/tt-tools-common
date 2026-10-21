@@ -89,17 +89,21 @@ class GalaxyReset:
     ):
         """Function to communicate with the server and handle errors and exceptions"""
         response_url, response_auth = self.mobo_address_generator(mobo, command)
-        if post:
-            response = requests.post(response_url, auth=response_auth, json=data)
-        else:
-            response = requests.get(
-                response_url,
-                auth=response_auth,
-            )
-
+        response = None
         try:
             exception = None
             response_json = {}  # Initializing just in case...
+            if post:
+                response = requests.post(
+                    response_url, auth=response_auth, json=data, timeout=30
+                )
+            else:
+                response = requests.get(
+                    response_url,
+                    auth=response_auth,
+                    timeout=30,
+                )
+            response.raise_for_status()
 
             # No response for successful shutdown/modules and boot/modules
             if response.text != "":
