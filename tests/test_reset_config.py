@@ -47,3 +47,11 @@ def test_generate_reset_logs(devices):
     parsed = parse_reset_input([file_path])
     assert parsed is not None
     assert parsed.type == ResetType.CONFIG_JSON
+
+
+def test_parse_reset_input_invalid_json_exits(tmp_path):
+    bad_json = tmp_path / "bad_reset.json"
+    bad_json.write_text("{invalid json")
+    with pytest.raises(SystemExit) as exc_info:
+        parse_reset_input([str(bad_json)])
+    assert exc_info.value.code == 1

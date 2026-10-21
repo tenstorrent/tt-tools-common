@@ -74,3 +74,12 @@ def test_is_driver_version_at_least():
     assert is_driver_version_at_least("1.34.0", "1.34.0")
     assert is_driver_version_at_least("2.0.0", "1.34.0")
     assert not is_driver_version_at_least("1.34.0", "1.35.0")
+
+
+def test_get_host_info_without_driver(monkeypatch):
+    from tt_tools_common.utils_common import system_utils
+    monkeypatch.setattr(system_utils, "get_driver_version", lambda: None)
+    info = system_utils.get_host_info()
+    assert info["Driver"] is None
+    compat = system_utils.get_host_compatibility_info()
+    assert compat["Driver"] == (None, "TT-KMD v1.27+")
