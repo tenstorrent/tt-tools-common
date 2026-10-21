@@ -17,6 +17,7 @@ from tt_tools_common.utils_common.tools_utils import read_refclk_counter
 from tt_tools_common.utils_common.system_utils import (
     check_driver_version,
     get_host_info,
+    check_supported_reset_platform,
     is_driver_version_at_least,
     get_driver_version
 )
@@ -100,16 +101,7 @@ class WHChipReset:
         # Check the driver version and bail if link reset cannot be supported
         check_driver_version(operation="board reset")
 
-        # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
-        # Check for platform and bail if it's Arm
-        platform = get_host_info()["Platform"]
-        if platform.startswith("arm") or platform.startswith("aarch"):
-            print(
-                CMD_LINE_COLOR.RED,
-                "Cannot perform WH board reset on Arm systems, please reboot the system to reset the boards. Exiting...",
-                CMD_LINE_COLOR.ENDC,
-            )
-            sys.exit(1)
+        check_supported_reset_platform('WH board')
 
         # Remove duplicates from the input list of PCI interfaces
         pci_interfaces = list(set(pci_interfaces))

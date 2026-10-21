@@ -15,6 +15,7 @@ from pyluwen import PciChip
 from tt_tools_common.ui_common.themes import CMD_LINE_COLOR
 from tt_tools_common.utils_common.system_utils import (
     get_host_info,
+    check_supported_reset_platform,
     is_driver_version_at_least,
     get_driver_version
 )
@@ -106,16 +107,7 @@ class BHChipReset:
                 CMD_LINE_COLOR.ENDC,
             )
 
-        # Due to how Arm systems deal with PCIe device rescans, WH device resets don't work on that platform.
-        # Check for platform and bail if it's Arm
-        platform = get_host_info()["Platform"]
-        if platform.startswith("arm") or platform.startswith("aarch"):
-            print(
-                CMD_LINE_COLOR.RED,
-                "Cannot perform WH board reset on Arm systems, please reboot the system to reset the boards. Exiting...",
-                CMD_LINE_COLOR.ENDC,
-            )
-            sys.exit(1)
+        check_supported_reset_platform('BH board')
 
         # Remove duplicates from the input list of PCI interfaces
         pci_interfaces = list(set(pci_interfaces))
