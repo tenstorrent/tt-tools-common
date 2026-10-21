@@ -162,7 +162,7 @@ def get_host_info() -> dict:
         "Platform": uname.machine,
         "Python": platform.python_version(),
         "Memory": get_size(svmem.total),
-        "Driver": "TT-KMD " + get_driver_version(),
+        "Driver": f"TT-KMD {driver_ver}" if (driver_ver := get_driver_version()) else None,
     }
 
 def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:

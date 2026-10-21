@@ -58,6 +58,7 @@ def parse_reset_input(value: list) -> ResetInput:
                 f"Please check the format of the json file.\n {e}",
                 CMD_LINE_COLOR.ENDC,
             )
+            sys.exit(1)
 
         except FileNotFoundError:
             # If no file found, attempt to parse the string as a list of comma separated integers
