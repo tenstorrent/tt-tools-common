@@ -207,3 +207,21 @@ def get_host_compatibility_info() -> Dict[str, Union[str, Tuple]]:
         checklist["Driver"] = (host_info["Driver"], "TT-KMD v1.27+")
 
     return checklist
+
+
+def check_supported_reset_platform(board_label: str = "board") -> None:
+    """
+    Exit if the host architecture does not support PCIe link/board reset rescans.
+
+    On Arm (arm*/aarch64) hosts, Linux kernel PCIe hotplug/link-down rescan
+    handling during secondary-bus/ASIC reset does not reliably re-enumerate
+    Tenstorrent PCIe endpoints without a full host reboot.
+    """
+    host_platform = get_host_info()["Platform"]
+    if host_platform.startswith("arm") or host_platform.startswith("aarch"):
+        print(
+            CMD_LINE_COLOR.RED,
+            f"Cannot perform {board_label} reset on Arm systems, please reboot the system to reset the boards. Exiting...",
+            CMD_LINE_COLOR.ENDC,
+        )
+        sys.exit(1)
